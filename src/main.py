@@ -36,12 +36,12 @@ if __name__ == "__main__":
     source_book = "TCE"
 
     # Select a campaign for the session
-    sm.select_campaign()
+    # sm.select_campaign()
 
     # # Create the tables
-    # TableInitializer.create_campaigns_table(dbm)
-    # TableInitializer.create_player_character_table(dbm)
-    # TableInitializer.create_loot_options_table(dbm)
+    TableInitializer.create_campaigns_table(dbm)
+    TableInitializer.create_player_character_table(dbm)
+    TableInitializer.create_loot_options_table(dbm)
     
     # # Create a campaign
     # campaign_id = cm.create_campaign(data)

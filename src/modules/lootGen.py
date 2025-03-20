@@ -30,7 +30,6 @@ class LootManager:
     def get_base_loot_table(self):
         """
         Simulates a user clicking a download button on a webpage using Selenium,
-        bypassing potential 403 errors or anti-scraping measures.
         """
         url = "http://localhost:5000/items.html"
         chrome_driver_path = os.getenv("CHROME_DRIVER_PATH")

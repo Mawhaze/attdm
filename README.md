@@ -2,11 +2,16 @@
 
 ## Python project to handel some DM activities
 
+> This requires a local postgreSQL container and a 5e.tools container until initial testing is complete
+> After initial testing, app/db/5e.tools/discord_bot will be moved to k8s
+
 ### Where i left off
+
 - working on the loot module
 - add ability to pull a characters spells and link the ddb sheet
 
 ### Stack
+
 - PostgreSQL for datastore
 - Python for data manipulation and FastAPI frontend
 - UI will be a discord bot
@@ -29,11 +34,12 @@
 ### Order of Operations
 
 - Select a campaign or create a new one
-    - 
+    > Select a campaign and set it as the current active for campaign_id
+    > Create new campaign, set as active campaign_id
 - Maintenance actions:
     1. list, add, delete characters in a campaign
         > pull player characters at the start of each session for updates
-        > manual option to pull player updates 
+        > manual option to pull player updates
     2. Create, Edit and Delete loot tables
     3. Create, Edit and Delete NPCs/locations/lore/etc
 - In game actions:
@@ -59,7 +65,7 @@
 - csv export from 5e.tool, python hackery to sql, creates links to dndbeyond item based on item name
 - Validate books to be used in the campaign upon campaign creation and generate loot table
 - provide loot, X  amount of gold and/or gems, custom item upgrade mat/part 
-    - player specific loot table + money/upgrade items based on player roll
+    > player specific loot table + money/upgrade items based on player roll
 - On start up, validate table structure exists
 
 ### Loot tables function
