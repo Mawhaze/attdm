@@ -2,7 +2,7 @@
 
 ## Python project to handel some DM activities
 
-> This requires a local postgreSQL container and a 5e.tools container until initial testing is complete
+> This requires a local postgreSQL container and a 5e.tools container until initial testing is complete.
 > After initial testing, app/db/5e.tools/discord_bot will be moved to k8s
 
 ### Where i left off
