@@ -23,7 +23,7 @@ class LootManager:
     def __init__(self, dbm):
         self.dbm = dbm
         self.table_name = "loot_options"
-        self.download_file_path = "/home/mawhaze/code/project_ender/attdm/tmp/loot_table"
+        self.download_file_path = "./tmp/loot_table"
         self.csv_file_name = "Items.csv"
         self.csv_file_path = os.path.join(self.download_file_path, self.csv_file_name)
 
@@ -33,6 +33,7 @@ class LootManager:
         """
         url = "http://localhost:5000/items.html"
         chrome_driver_path = os.getenv("CHROME_DRIVER_PATH")
+        driver = chrome_driver_path
 
         try:
             chrome_options = Options()

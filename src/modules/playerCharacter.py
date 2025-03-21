@@ -52,7 +52,7 @@ class PCManager:
         Adds a player character to a campaign.
         """
         
-        player_json["campaign_id"] = int(campaign_id)
+        player_json["campaign_id"] = campaign_id
         player_json["character_id"] = character_id
         return self.dbm.insert_data(self.table_name, player_json)
 
@@ -60,10 +60,10 @@ class PCManager:
         """
         Lists all player characters in a campaign.
         """
-
-        condition = f"campaign_id = {campaign_id}"
-        columns = "name, character_id"
-        return self.dbm.fetch_data(self.table_name, columns=columns, condition=condition)
+        columns = "name, character_id, class_level"
+        condition = "campaign_id = %s"
+        result = self.dbm.fetch_data(self.table_name, columns=columns, condition=condition, params=(campaign_id,))
+        return result if result else []
 
     def delete_pc(self, character_id):
         """
@@ -78,12 +78,13 @@ class PCManager:
         Updates a player characters sheet information
         """
 
-        condition = f"character_id = '{character_id}'"
-        data = self.pull_pc_ddbsheet(character_id)
+        condition = "character_id = %s"
+        params = (character_id,)
+        data = PCManager.pull_pc_ddbsheet(self, character_id)
         if data and 'inventory' in data:
             data['inventory'] = json.dumps(data['inventory'])
 
-        return self.dbm.update_data(self.table_name, data, condition=condition)
+        return self.dbm.update_data(self.table_name, data, condition=condition, params=params)
 
     def get_pc_inventory(self, character_id):
         """

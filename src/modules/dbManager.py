@@ -107,18 +107,7 @@ class DatabaseManager:
         finally:
             self.close()
     
-    def fetch_data(self, table_name, columns="*", condition=None):
-        """
-        Fetches data from a PostgreSQL database table.
-
-        Args:
-            table_name (str): Name of the table to fetch data from.
-            columns (str, optional): Comma-separated list of columns to retrieve. Defaults to "*".
-            condition (str, optional): WHERE clause to filter the data. Defaults to None.
-
-        Returns:
-            list: A list of tuples containing the fetched data, or None if an error occurs.
-        """
+    def fetch_data(self, table_name, columns="*", condition=None, params=None):
         try:
             conn, cur = self.connect()
             if not conn:
@@ -128,10 +117,8 @@ class DatabaseManager:
             if condition:
                 select_query += f" WHERE {condition}"
 
-            cur.execute(select_query)
-
+            cur.execute(select_query, params)
             rows = cur.fetchall()
-
             return rows
 
         except psycopg2.Error as e:
@@ -140,30 +127,24 @@ class DatabaseManager:
         finally:
             self.close()
 
-    def update_data(self, table_name, data, condition):
-        """
-        Updates data in a PostgreSQL database table.
-
-        Args:
-            table_name (str): Name of the table to update.
-            data (dict): Dictionary where keys are column names and values are the new data.
-            condition (str): WHERE clause to identify the rows to update.
-
-        Returns:
-            bool: True if the update was successful, False otherwise.
-        """
+    def update_data(self, table_name, data, condition=None, params=None): 
         try:
             conn, cur = self.connect()
             if not conn:
                 return False
 
             set_clause = ", ".join(f"{col} = %s" for col in data.keys())
-            update_query = f"UPDATE {table_name} SET {set_clause} WHERE {condition}"
+            update_query = f"UPDATE {table_name} SET {set_clause}"
+            query_params = list(data.values())
 
-            cur.execute(update_query, tuple(data.values()))
+            if condition:
+                update_query += f" WHERE {condition}"
+                if params:
+                    query_params.extend(params)
+
+            cur.execute(update_query, tuple(query_params))
 
             conn.commit()
-
             print(f"Data updated successfully in table '{table_name}'.")
             return True
 
