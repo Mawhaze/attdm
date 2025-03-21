@@ -7,7 +7,7 @@
 
 ### Where i left off
 
-- building a basic CLI to test functionality and trial out during a dnd campaign prior to the api being built.
+- building a basic CLI to test functionality and test out during a dnd campaign prior to the api being built.
 - need to add loot tables to the campaign and build out pc loot selection function
 
 ### Stack
