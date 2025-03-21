@@ -29,16 +29,15 @@ class PCManager:
         Takes a character ID and retrieves relevant data from a character sheet PDF.
         """
         # Get PDF data from URL
-        pdf_processor = PDFProcessor()
-        pdf_data = pdf_processor.get_pdf_from_url(character_id)
+        pdf_data = PDFProcessor.get_pdf_from_url(character_id)
 
         if pdf_data:
             # Convert PDF data to JSON
-            json_data = pdf_processor.convert_pdf_to_json(pdf_data)
+            json_data = PDFProcessor.convert_pdf_to_json(pdf_data)
 
             if json_data:
                 # Process JSON and create PlayerCharacter object
-                player_json = pdf_processor.process_json_document(json_data)
+                player_json = PDFProcessor.process_json_document(json_data)
                 print(player_json)
 
                 return player_json

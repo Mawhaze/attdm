@@ -23,7 +23,7 @@ class LootManager:
     def __init__(self, dbm):
         self.dbm = dbm
         self.table_name = "loot_options"
-        self.download_file_path = "./tmp/loot_table"
+        self.download_file_path = "/mnt/c/Documents and Settings/evanc/code/project_ender/attdm/tmp/loot_table"
         self.csv_file_name = "Items.csv"
         self.csv_file_path = os.path.join(self.download_file_path, self.csv_file_name)
 
@@ -31,16 +31,14 @@ class LootManager:
         """
         Simulates a user clicking a download button on a webpage using Selenium,
         """
-        url = "http://localhost:5000/items.html"
-        chrome_driver_path = os.getenv("CHROME_DRIVER_PATH")
-        driver = chrome_driver_path
+        url = "http://localhost:8080/items.html"
 
         try:
             chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_experimental_option("prefs", {
-                "download.default_directory": self.csv_file_path,
+                "download.default_directory": self.download_file_path,
                 "download.prompt_for_download": False,
                 "download.directory_upgrade": True,
                 "safebrowsing.enabled": False
@@ -97,11 +95,16 @@ class LootManager:
         print("JSON data converted successfully.")
         return json_data
 
-    def add_source_loot(self, source_book, campaign_id):
+    def add_source_loot(self, source_books, campaign_id):
         """
         Add a source book's magic items to the loot table.
         Cleans up the item entries.
         """
+        if not os.path.isfile(LootManager.csv_file_path):
+            print("File not found, or is not a valid file.")
+            print("Recreating loot table...")
+            self.get_base_loot_table()
+
         target_key = "Source"
         keys_to_keep = ["Name", "Type", "Rarity", "Attunement", "Source", "Text"]
         filtered_items = []
@@ -110,8 +113,9 @@ class LootManager:
 
         def search(data):
             if isinstance(data, dict):
-                if data.get(target_key) == source_book:
+                if data.get(target_key) == source_books:
                     filtered_item = {k: data.get(k, '') for k in keys_to_keep}
+                    filtered_item['campaign_id'] = campaign_id
                     filtered_items.append(filtered_item)
                 else:
                     for v in data.values():
