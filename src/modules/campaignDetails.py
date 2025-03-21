@@ -1,5 +1,7 @@
 import os
 
+from .playerCharacter import PCManager
+
 # from .dbManager import DatabaseManager
 
 class CampaignManager:
@@ -67,6 +69,90 @@ class SessionManager:
             if len(campaign) >= 2:
                 campaign_id, campaign_name = campaign[0], campaign[1]
                 campaign_output.append(f"ID: {campaign_id} | Name: {campaign_name}")
+        
+        while True:
+            try:
+                print("ID: 0 | Name: Create New Campaign")
+                print("\n".join(campaign_output))
+                campaign_id = int(input("Enter the ID of the campaign you want to select: "))
+                # Check if the selected ID exists in the campaign list
+                if any(campaign_id == campaign[0] for campaign in campaign_list):
+                    print(f"Campaign {campaign_id} selected.")
+                    return campaign_id
+                elif campaign_id == 0:
+                    print("Creating a new campaign...")
+                    # Prompt for new campaign details
+                    data = {
+                        "name": input("Enter the campaign name: "),
+                        "dm": input("Enter the DM name: "),
+                        "loot_books": [],
+                        "data": {}
+                    }
+                    CampaignManager.create_campaign(self, data)
+                    selected_campaign_id = CampaignManager.list_campaigns(self)[-1][0]
+                    print(f"New campaign created with ID {selected_campaign_id}.")
+                    campaign_id = selected_campaign_id
+                    return campaign_id
+                else:
+                    print("Invalid campaign ID. Please try again.")
+            except ValueError:
+                print("Please enter a valid number.")
 
-        # return "\n".join(output) if output else "No valid campaign data found"
-        print(campaign_output)
+    def session_menu(self, campaign_id):
+        """
+        Displays the session menu for the selected campaign.
+        """
+        while True:
+            print("Session Menu:")
+            print("1. Loot Options")
+            print("2. Player Characters")
+            print("3. Session Notes")
+            print("4. Exit")
+        
+            choice = input("Enter your choice: ")
+            if  choice == '1':
+                while True:
+                    print("Loot Options:")
+                    print("0. Back")
+                    print("1. Roll Loot")
+                    print("2. List Current Loot Sources")
+                    print("3. Add Loot Source")
+
+                    loot_choice = input("Enter your choice: ")
+                    if loot_choice == '0':
+                        break
+                    if loot_choice == '1':
+                        print("Rolling loot...")
+                    if loot_choice == '2':
+                        print("Listing current loot sources...")
+                    if loot_choice == '3':
+                        print("Adding loot source...")
+            elif choice == '2':
+                while True:
+                    print(f"Player Characters for campaign {campaign_id}:")
+                    print("Player Options:")
+                    print("0. Back")
+                    print("1. Add Character")
+                    print("2. Update Character Sheets")
+
+                    pc_choice = input("Enter your choice: ")
+                    if pc_choice == '0':
+                        break
+                    elif pc_choice == '1':
+                        character_id = input("Enter the character ID: ")
+                        player_json = PCManager.pull_pc_ddbsheet(self, character_id)
+                        if player_json:
+                            PCManager.add_pc_to_campaign(self, campaign_id, character_id, player_json)
+                            print(f"{character_id} added to campaign {campaign_id}")
+                    elif pc_choice == '2':
+                        print("Updating character sheets...")
+
+            elif choice == '3':
+                print(f"Session Notes for campaign {campaign_id}:")
+                # TODO: Placeholder for session notes functionality
+                print(" to be built")
+
+            elif choice == '4':
+                break
+            else:
+                print("Invalid choice. Please try again.")

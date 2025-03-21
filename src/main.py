@@ -18,30 +18,30 @@ if __name__ == "__main__":
         "password": os.getenv("DB_PASSWORD")
     }
     # Required data for a creating a test campaign
-    data = {
-        "name": "Test Campaign",
-        "dm": "Test DM",
-        "loot_books": [],
-        "data": {}
-    }
-    # Define the object that is going to perform CRUD commands
+    # data = {
+    #     "name": "Test Campaign",
+    #     "dm": "Test DM",
+    #     "loot_books": [],
+    #     "data": {}
+    # }
     dbm = DatabaseManager(db_params)
     pcm = PCManager(dbm)
     cm = CampaignManager(dbm)
     lm = LootManager(dbm)
     sm = SessionManager(dbm)
 
-    character_id = os.getenv("CHARACTER_ID")
-    campaign_id = os.getenv("CAMPAIGN_ID")
+    # character_id = os.getenv("CHARACTER_ID")
+    # campaign_id = os.getenv("CAMPAIGN_ID")
     source_book = "TCE"
 
     # Select a campaign for the session
-    # sm.select_campaign()
+    campaign_id = sm.select_campaign()
+    sm.session_menu(campaign_id)
 
     # # Create the tables
-    TableInitializer.create_campaigns_table(dbm)
-    TableInitializer.create_player_character_table(dbm)
-    TableInitializer.create_loot_options_table(dbm)
+    # TableInitializer.create_campaigns_table(dbm)
+    # TableInitializer.create_player_character_table(dbm)
+    # TableInitializer.create_loot_options_table(dbm)
     
     # # Create a campaign
     # campaign_id = cm.create_campaign(data)

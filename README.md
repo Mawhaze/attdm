@@ -7,8 +7,8 @@
 
 ### Where i left off
 
-- working on the loot module
-- add ability to pull a characters spells and link the ddb sheet
+- building a basic CLI to test functionality and trial out during a dnd campaign prior to the api being built.
+- need to add loot tables to the campaign and build out pc loot selection function
 
 ### Stack
 

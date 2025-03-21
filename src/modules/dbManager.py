@@ -228,8 +228,8 @@ class TableInitializer:
             "loot_books": "JSONB",  
             "data": "JSONB"
         }
-        return dbm.create_table(table_name, columns)
         print (f"{table_name} initialized successfully.")
+        return dbm.create_table(table_name, columns)
 
     # Create the player_characters table
     def create_player_character_table(dbm):
@@ -251,8 +251,8 @@ class TableInitializer:
             "inventory": "JSONB",  # Stores the inventory as a JSON array
             "dm_notes": "JSONB"  # Stores other character data as a JSON object
         }
-        return dbm.create_table(table_name, columns)
         print (f"{table_name} initialized successfully.")
+        return dbm.create_table(table_name, columns)
 
         # Create the loot table
     def create_loot_options_table(dbm):
@@ -270,5 +270,5 @@ class TableInitializer:
             "attunement": "TEXT",
             "text": "TEXT"
         }
-        return dbm.create_table(table_name, columns)
         print (f"{table_name} initialized successfully.")
+        return dbm.create_table(table_name, columns)

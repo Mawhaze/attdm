@@ -135,7 +135,7 @@ class LootManager:
             self.dbm.insert_data(self.table_name, lowercase_item)
 
         print("Loot table generated successfully and added to the database.")
-        return filtered_items 
+        return filtered_items
 
 # class LootGenerator:
 #     """
