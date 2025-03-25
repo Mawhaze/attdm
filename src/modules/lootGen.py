@@ -276,7 +276,7 @@ class LootGenerator:
         Generates a link to the D&D Beyond page for a specific item.
         """
         # Replace spaces with hyphens and convert to lowercase
-        item_name = item_name.replace(" ", "-").lower()
+        item_name = item_name.replace(" ", "-").replace("'", "").replace(",", "").lower()
 
         # Check if the item starts with a "+" followed by a number
         if item_name.startswith("+") and item_name[1].isdigit():
