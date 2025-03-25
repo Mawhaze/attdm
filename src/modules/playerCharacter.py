@@ -75,16 +75,23 @@ class PCManager:
 
     def update_pc(self, character_id):
         """
-        Updates a player characters sheet information
+        Updates a player character's sheet information.
         """
+        # Retrieve the updated data for the character
+        data = self.pull_pc_ddbsheet(character_id)
+        if not data:
+            print(f"Failed to retrieve updated data for character ID '{character_id}'.")
+            return False
 
-        condition = "character_id = %s"
-        params = (character_id,)
-        data = PCManager.pull_pc_ddbsheet(self, character_id)
-        if data and 'inventory' in data:
+        # Ensure the inventory is properly formatted as JSON
+        if 'inventory' in data:
             data['inventory'] = json.dumps(data['inventory'])
 
-        return self.dbm.update_data(self.table_name, data, condition=condition, params=params)
+        # Define the condition as a dictionary
+        condition = {"character_id": character_id}
+
+        # Perform the update
+        return self.dbm.update_data(self.table_name, data, condition)
 
     def get_pc_stat(self, character_id, column):
         """
@@ -118,7 +125,7 @@ class PCManager:
             return None
 
         class_level = result[0][0].strip()
-        # print(f"Raw class_level for character ID {character_id}: {repr(class_level)}")
+        print(f"Raw class_level for character ID {character_id}: {repr(class_level)}")
 
         # Split the class_level into individual class/level pairs
         class_level_parts = class_level.split(" / ")
@@ -145,3 +152,48 @@ class PCManager:
             "total_level": total_level,
             "classes": class_breakdown
         }
+    
+    def list_passive_stats(self, player_list):
+        """
+        Lists player characters sorted by passive stats (perception, investigation, insight).
+
+        Args:
+            player_list (list): A list of player tuples (player_name, character_id).
+            pcm (PCManager): An instance of the PCManager class.
+        """
+        # Initialize dictionaries to store stats
+        passive_perception = []
+        passive_investigation = []
+        passive_insight = []
+
+        # Loop through each player and fetch their stats
+        for player_name, character_id, _ in player_list:
+            try:
+                perception = self.get_pc_stat(character_id, "passive_perception")[0][0]
+                investigation = self.get_pc_stat(character_id, "passive_investigation")[0][0]
+                insight = self.get_pc_stat(character_id, "passive_insight")[0][0]
+
+                # Append stats to respective lists
+                passive_perception.append((player_name, perception))
+                passive_investigation.append((player_name, investigation))
+                passive_insight.append((player_name, insight))
+            except Exception as e:
+                print(f"Error retrieving stats for {player_name} (ID: {character_id}): {e}")
+
+        # Sort each list by the stat value in descending order
+        passive_perception.sort(key=lambda x: x[1], reverse=True)
+        passive_investigation.sort(key=lambda x: x[1], reverse=True)
+        passive_insight.sort(key=lambda x: x[1], reverse=True)
+
+        # Print the results
+        print("\nPassive Perception (Highest to Lowest):")
+        for player_name, value in passive_perception:
+            print(f"{player_name}: {value}")
+
+        print("\nPassive Investigation (Highest to Lowest):")
+        for player_name, value in passive_investigation:
+            print(f"{player_name}: {value}")
+
+        print("\nPassive Insight (Highest to Lowest):")
+        for player_name, value in passive_insight:
+            print(f"{player_name}: {value}")

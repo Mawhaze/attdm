@@ -123,7 +123,9 @@ class SessionManager:
             player_list = self.pcm.list_pc_per_campaign(campaign_id)
             if player_list:
                 for player in player_list:
-                    print(player)
+                    name, _, class_level = player
+                    short_pc_list = player
+                    print(f"{name} - {class_level}")
             else:
                 print("No player characters found in this campaign.")
             
@@ -187,6 +189,7 @@ class SessionManager:
                     print("0. Back")
                     print("1. Add Character")
                     print("2. Update Character Sheets")
+                    print("3. List Passive Stats")
 
                     pc_choice = input("Enter your choice: ")
                     if pc_choice == '0':
@@ -203,7 +206,10 @@ class SessionManager:
                         print("Updating character sheets...")
                         for player in player_list:
                             character_id = player[1]
-                            self.pcm.update_pc(self, character_id)
+                            self.pcm.update_pc(character_id)
+                    elif pc_choice == '3':
+                        print("Listing passive stats for all players in the campaign...")
+                        self.pcm.list_passive_stats(player_list)
             elif choice == '3':
                 print(f"Session Notes for campaign {campaign_id}:")
                 # TODO: Placeholder for session notes functionality

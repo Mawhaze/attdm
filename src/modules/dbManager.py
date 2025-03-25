@@ -271,9 +271,8 @@ class TableInitializer:
             "passive_insight": "INTEGER",
             "species": "VARCHAR(50)",
             "death_recap": "TEXT",
-            "inventory": "JSONB",  # Stores the inventory as a JSON array
-            "dm_notes": "JSONB"  # Stores other character data as a JSON object
-        }
+            "inventory": "JSONB",
+            "dm_notes": "JSONB"        }
         return dbm.create_table(table_name, columns)
 
         # Create the loot table
