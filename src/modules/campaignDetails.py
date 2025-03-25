@@ -1,7 +1,7 @@
 import os
 
-from .playerCharacter import PCManager as pcm
-from .lootGen import LootManager as lm
+from .playerCharacter import PCManager
+from .lootGen import LootManager, LootGenerator
 
 # from .dbManager import DatabaseManager
 
@@ -52,6 +52,9 @@ class SessionManager:
         Initializes the SessionManager with a database manager and campaign ID.
         """
         self.dbm = dbm
+        self.lm = LootManager(dbm)
+        self.pcm = PCManager(dbm)
+        self.lg = LootGenerator(dbm)
 
     def select_campaign(self):
         """
@@ -61,8 +64,20 @@ class SessionManager:
         self.table_name = "campaigns"
         print("Select a Campaign...")
         campaign_list = CampaignManager.list_campaigns(self)
+        
+        # If no campaigns exist, create a new one
         if not campaign_list:
-            return "No campaigns available"
+            print("No campaigns available. Creating a new campaign...")
+            data = {
+                "name": input("Enter the campaign name: "),
+                "dm": input("Enter the DM name: "),
+                "loot_books": [],
+                "data": {}
+            }
+            CampaignManager.create_campaign(self, data)
+            selected_campaign_id = CampaignManager.list_campaigns(self)[-1][0]
+            print(f"New campaign created with ID {selected_campaign_id}.")
+            return selected_campaign_id
         
         campaign_output =[]
         for campaign in campaign_list:
@@ -105,7 +120,7 @@ class SessionManager:
         while True:
             self.table_name = "player_characters"
             print(f"Player Characters for campaign {campaign_id}:")
-            player_list = pcm.list_pc_per_campaign(self, campaign_id)
+            player_list = self.pcm.list_pc_per_campaign(campaign_id)
             if player_list:
                 for player in player_list:
                     print(player)
@@ -132,14 +147,38 @@ class SessionManager:
                     if loot_choice == '0':
                         break
                     if loot_choice == '1':
-                        print("Rolling loot...")
+                        print("Select a player character to roll loot for.")
+                        # Display a numbered list of character names
+                        for idx, player in enumerate(player_list, start=1):
+                            print(f"{idx}. {player[0]}")
+                        # Prompt the user to select a character by number
+                        try:
+                            selected_idx = int(input("Enter the number of the character: ")) - 1
+                            if selected_idx < 0 or selected_idx >= len(player_list):
+                                print("Invalid selection. Please try again.")
+                                continue
+                            # Get the character_id of the selected character
+                            character_id = player_list[selected_idx][1]
+                            print(f"Rolling loot for {character_id}...")
+                        except ValueError:
+                            print("Invalid input. Please enter a number.")
+                        loot = self.lg.roll_loot(character_id, campaign_id)
+                        print(loot)
+                        for item in loot:
+                            item_url = self.lg.get_item_link(item)
+                            print(f"{item} - {item_url}")
                     if loot_choice == '2':
                         print("Listing current loot sources...")
+                        current_sources = self.lm.list_current_sources(campaign_id)
+                        unique_sources = set(source for _, source in current_sources)
+                        print("Current loot sources:")
+                        for source in unique_sources:
+                            print(source)
                     if loot_choice == '3':
                         print("Choose a source book to add, separated by commas.")
                         print("DMG'24, ERLW, PHB'24, TCE, XGE")
                         source_books = input("Enter source books: ").split(",")
-                        lm.add_source_loot(self, source_books, campaign_id)
+                        self.lm.add_source_loot(source_books, campaign_id)
 
             elif choice == '2':
                 while True:
@@ -154,9 +193,9 @@ class SessionManager:
                         break
                     elif pc_choice == '1':
                         character_id = input("Enter the character ID: ")
-                        player_json = pcm.pull_pc_ddbsheet(self, character_id)
+                        player_json = self.pcm.pull_pc_ddbsheet(character_id)
                         if player_json:
-                            pcm.add_pc_to_campaign(self, campaign_id, character_id, player_json)
+                            self.pcm.add_pc_to_campaign(campaign_id, character_id, player_json)
                             print(f"{character_id} added to campaign {campaign_id}")
                         else:
                             print("Failed to retrieve character data.")
@@ -164,7 +203,7 @@ class SessionManager:
                         print("Updating character sheets...")
                         for player in player_list:
                             character_id = player[1]
-                            pcm.update_pc(self, character_id)
+                            self.pcm.update_pc(self, character_id)
             elif choice == '3':
                 print(f"Session Notes for campaign {campaign_id}:")
                 # TODO: Placeholder for session notes functionality

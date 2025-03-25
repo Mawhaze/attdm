@@ -7,8 +7,9 @@
 
 ### Where i left off
 
-- building a basic CLI to test functionality and test out during a dnd campaign prior to the api being built.
-- need to add loot tables to the campaign and build out pc loot selection function
+- Finished up the loot_roll function. it rolls items with rarity depending on level, player attunment ability and validates the pc doesn't have it already. Outputs an item name and dndbeyond link
+- Next to work on is pulling passive stats on command and adding note to DM fields
+- Then creating the lore databases
 
 ### Stack
 
@@ -59,6 +60,7 @@
 
 ## General notes
 
+- Dockerfile will need to handle the chromedriver for selenium
 - Organized by campaign
 - dndbeyond can pull up characters based on the number id in the url 
     > https://character-service.dndbeyond.com/character/v5/character/5242429

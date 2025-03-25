@@ -87,7 +87,7 @@ class DatabaseManager:
 
             # Convert JSONB columns to JSON strings
             for key, value in data.items():
-                if isinstance(value, (dict, list)):
+                if isinstance(value, (dict, list)) and key != "campaign_id":
                     data[key] = json.dumps(value)  # Convert to JSON string
 
             columns = ", ".join(data.keys())
@@ -108,16 +108,45 @@ class DatabaseManager:
             self.close()
     
     def fetch_data(self, table_name, columns="*", condition=None, params=None):
+        """
+        Fetches data from a PostgreSQL database table.
+
+        Args:
+            table_name (str): Name of the table to fetch data from.
+            columns (str): Columns to select.
+            condition (str or dict, optional): WHERE clause condition (string or dictionary).
+            params (tuple, optional): Parameters for the WHERE clause.
+
+        Returns:
+            list: List of rows matching the conditions.
+        """
         try:
             conn, cur = self.connect()
             if not conn:
                 return None
 
-            select_query = f"SELECT {columns} FROM {table_name}"
+            query = f"SELECT {columns} FROM {table_name}"
             if condition:
-                select_query += f" WHERE {condition}"
+                if isinstance(condition, str):
+                    # Use the string condition directly
+                    query += f" WHERE {condition}"
+                elif isinstance(condition, dict):
+                    # Process dictionary conditions
+                    where_clauses = []
+                    values = []
+                    for key, value in condition.items():
+                        if isinstance(value, list):  # Handle array conditions
+                            where_clauses.append(f"{key} @> %s")
+                            values.append(value)
+                        else:
+                            where_clauses.append(f"{key} = %s")
+                            values.append(value)
+                    where_clause = " AND ".join(where_clauses)
+                    query += f" WHERE {where_clause}"
+                    params = tuple(values)  # Update params with processed values
 
-            cur.execute(select_query, params)
+            cur.execute(query, params)
+
             rows = cur.fetchall()
             return rows
 
@@ -127,24 +156,38 @@ class DatabaseManager:
         finally:
             self.close()
 
-    def update_data(self, table_name, data, condition=None, params=None): 
+    def update_data(self, table_name, data, condition):
+        """
+        Updates data in a PostgreSQL database table.
+
+        Args:
+            table_name (str): Name of the table to update data in.
+            data (dict): Dictionary of columns and their new values.
+            condition (dict): Dictionary of conditions for the WHERE clause.
+
+        Returns:
+            bool: True if the update was successful, False otherwise.
+        """
         try:
             conn, cur = self.connect()
             if not conn:
                 return False
 
-            set_clause = ", ".join(f"{col} = %s" for col in data.keys())
-            update_query = f"UPDATE {table_name} SET {set_clause}"
-            query_params = list(data.values())
+            # Build the SET clause
+            set_clause = ", ".join([f"{key} = %s" for key in data.keys()])
+            set_values = list(data.values())
 
-            if condition:
-                update_query += f" WHERE {condition}"
-                if params:
-                    query_params.extend(params)
+            # Build the WHERE clause
+            where_clause = " AND ".join([f"{key} = %s" for key in condition.keys()])
+            where_values = list(condition.values())
 
-            cur.execute(update_query, tuple(query_params))
+            # Combine the query
+            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
 
+            # Execute the query
+            cur.execute(query, set_values + where_values)
             conn.commit()
+
             print(f"Data updated successfully in table '{table_name}'.")
             return True
 
@@ -209,7 +252,6 @@ class TableInitializer:
             "loot_books": "JSONB",  
             "data": "JSONB"
         }
-        print (f"{table_name} initialized successfully.")
         return dbm.create_table(table_name, columns)
 
     # Create the player_characters table
@@ -220,19 +262,18 @@ class TableInitializer:
         table_name="player_characters"
         columns = {
             "id": "SERIAL PRIMARY KEY",
-            "campaign_id": "INT NOT NULL",
+            "campaign_id": "INTEGER[]",
             "character_id": "VARCHAR(50) UNIQUE NOT NULL",
             "name": "TEXT NOT NULL",
-            "class_level": "VARCHAR(50)",
-            "passive_perception": "VARCHAR(50)",
-            "passive_investigation": "VARCHAR(50)",
-            "passive_insight": "VARCHAR(50)",
+            "class_level": "TEXT",
+            "passive_perception": "INTEGER",
+            "passive_investigation": "INTEGER",
+            "passive_insight": "INTEGER",
             "species": "VARCHAR(50)",
             "death_recap": "TEXT",
             "inventory": "JSONB",  # Stores the inventory as a JSON array
             "dm_notes": "JSONB"  # Stores other character data as a JSON object
         }
-        print (f"{table_name} initialized successfully.")
         return dbm.create_table(table_name, columns)
 
         # Create the loot table
@@ -251,5 +292,4 @@ class TableInitializer:
             "attunement": "TEXT",
             "text": "TEXT"
         }
-        print (f"{table_name} initialized successfully.")
         return dbm.create_table(table_name, columns)
