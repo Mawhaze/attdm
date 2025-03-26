@@ -6,10 +6,9 @@
 > After initial testing, app/db/5e.tools/discord_bot will be moved to k8s
 
 ### Where i left off
-
-- Finished up the loot_roll function. it rolls items with rarity depending on level, player attunment ability and validates the pc doesn't have it already. Outputs an item name and dndbeyond link
-- Next to work on is pulling passive stats on command and adding note to DM fields
-- Then creating the lore databases
+ 
+- Next to build is the API 
+- All base functionality validated via thecli menu 
 
 ### Stack
 
