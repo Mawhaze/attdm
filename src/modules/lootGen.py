@@ -2,7 +2,7 @@ import csv
 import json
 import random
 import time
-import requests
+import re
 import os 
 
 from selenium import webdriver
@@ -18,9 +18,6 @@ class LootManager:
     """
     Manages loot for a campaign including loot table generation.
     Validates player character specific loot options.
-
-    Args:
-        csv_file_path (str, optional): The directory to save the downloaded file. Defaults to the current directory.
     """
     def __init__(self, dbm):
         self.dbm = dbm
@@ -187,20 +184,20 @@ class LootGenerator:
         self.pcm = PCManager(dbm)
         self.table_name = "loot_options"
 
-    def player_validation(self, character_id):
+    def player_validation(self, name):
         """
         Checks the required data for the player character.
         Takes the character_id and retrieves level and inventory data. 
         """
         # Get the player class and level
-        pcl = self.pcm.get_player_class_and_level(character_id)
+        pcl = self.pcm.get_player_class_and_level(name)
         player_class = pcl["classes"]
         player_level = pcl["total_level"]
         # Get the player inventory
-        player_inventory = self.pcm.get_pc_stat(character_id, "inventory") 
+        player_inventory = self.pcm.get_pc_stat(name, "inventory") 
         return player_class, player_level, player_inventory
 
-    def roll_loot(self, character_id, campaign_id):
+    def roll_loot(self, name, campaign_id):
         """
         Rolls loot for a player character based on their level, class compatibility, and campaign association.
         Determines the rarity of loot based on the player's level range.
@@ -208,7 +205,7 @@ class LootGenerator:
         Returns a list of item names.
         """
         # Load the player character data
-        validation_check = self.player_validation(character_id)
+        validation_check = self.player_validation(name)
         pl = validation_check[1]  # Player level
         pc = validation_check[0]  # Player class (dictionary of classes and levels)
         pi = validation_check[2]  # Player inventory
@@ -276,6 +273,7 @@ class LootGenerator:
         Generates a link to the D&D Beyond page for a specific item.
         """
         # Format item name for the URL
+        item_name = re.sub(r"\s*\(.*?\)", "", item_name).strip()
         item_name = item_name.replace(" ", "-").replace("'", "").split(",", 1)[0].lower()
 
         # Check if the item starts with a "+" followed by a number

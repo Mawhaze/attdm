@@ -1,20 +1,12 @@
 import json
-import os
 
-from .dbManager import DatabaseManager
-from .pdfUtils import PDFProcessor
+from src.modules.pdfUtils import PDFProcessor
 
 
 class PCManager:
     """
     Manages player character operations including campaign association,
     data retrieval, and updates.
-        
-    Args:
-        dbm (DatabaseManager): An instance of the DatabaseManager class.
-        campaign_id (int): The ID of the campaign to add the character to.
-        character_id (str): The ID of the character to add to the campaign.
-        data (dict): A dictionary containing the updated character data.
     """
 
     def __init__(self, dbm):
@@ -127,7 +119,7 @@ class PCManager:
             except ValueError:
                 print("Invalid input. Please enter a number.")
     
-    def get_player_class_and_level(self, character_id):
+    def get_player_class_and_level(self, name):
         """
         Retrieves the class_level of a player character and separates it into player_class and player_level.
         """
@@ -135,16 +127,16 @@ class PCManager:
         result = self.dbm.fetch_data(
             self.table_name,
             columns="class_level",
-            condition="character_id = %s",
-            params=(character_id,)
+            condition="name = %s",
+            params=(name,)
         )
 
         if not result or not result[0][0]:
-            print(f"No class_level data found for character ID {character_id}.")
+            print(f"No class_level data found for character {name}.")
             return None
 
         class_level = result[0][0].strip()
-        print(f"Raw class_level for character ID {character_id}: {repr(class_level)}")
+        print(f"Raw class_level for character ID {name}: {repr(class_level)}")
 
         # Split the class_level into individual class/level pairs
         class_level_parts = class_level.split(" / ")
@@ -200,15 +192,4 @@ class PCManager:
         passive_investigation.sort(key=lambda x: x[1], reverse=True)
         passive_insight.sort(key=lambda x: x[1], reverse=True)
 
-        # Print the results
-        print("\nPassive Perception (Highest to Lowest):")
-        for player_name, value in passive_perception:
-            print(f"{player_name}: {value}")
-
-        print("\nPassive Investigation (Highest to Lowest):")
-        for player_name, value in passive_investigation:
-            print(f"{player_name}: {value}")
-
-        print("\nPassive Insight (Highest to Lowest):")
-        for player_name, value in passive_insight:
-            print(f"{player_name}: {value}")
+        return passive_perception, passive_investigation, passive_insight

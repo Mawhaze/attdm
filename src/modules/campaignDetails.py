@@ -1,8 +1,5 @@
-import os
-
-from .dmNotes import PlayerNotes, LoreNotes
-from .playerCharacter import PCManager
-from .lootGen import LootManager, LootGenerator
+from src.modules.playerCharacter import PCManager
+from src.modules.lootGen import LootManager, LootGenerator
 
 # from .dbManager import DatabaseManager
 
@@ -56,8 +53,6 @@ class SessionManager:
         self.lm = LootManager(dbm)
         self.pcm = PCManager(dbm)
         self.lg = LootGenerator(dbm)
-        self.pcnt = PlayerNotes(dbm)
-        self.ln = LoreNotes(dbm)
 
     def select_campaign(self):
         """

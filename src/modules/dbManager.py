@@ -8,18 +8,12 @@ class DatabaseManager:
     def __init__(self, db_params):
         """
         Initializes the DatabaseManager with connection parameters.
-
-        Args:
-            db_params (dict): Dictionary containing database connection parameters.
         """
         self.db_params = db_params
 
     def connect(self):
         """
         Establishes a connection to the PostgreSQL database.
-
-        Returns:
-            psycopg2.connection: A connection object.
         """
         try:
             self.conn = psycopg2.connect(**self.db_params)
@@ -41,13 +35,6 @@ class DatabaseManager:
     def create_table(self, table_name, columns):
         """
         Creates a table in the PostgreSQL database.
-
-        Args:
-            table_name (str): Name of the table to create.
-            columns (dict): Dictionary defining the table columns.
-
-        Returns:
-            bool: True if the table was created successfully, False otherwise.
         """
         try:
             conn, cur = self.connect()
@@ -72,13 +59,6 @@ class DatabaseManager:
     def insert_data(self, table_name, data):
         """
         Inserts data into a PostgreSQL database table.
-        
-        Args:
-            table_name (str): Name of the table to insert data into.
-            data (dict): Dictionary where keys are column names and values are the data to insert.
-
-        Returns:
-            bool: True if the insertion was successful, False otherwise.
         """
         try:
             conn, cur = self.connect()
@@ -110,15 +90,6 @@ class DatabaseManager:
     def fetch_data(self, table_name, columns="*", condition=None, params=None):
         """
         Fetches data from a PostgreSQL database table.
-
-        Args:
-            table_name (str): Name of the table to fetch data from.
-            columns (str): Columns to select.
-            condition (str or dict, optional): WHERE clause condition (string or dictionary).
-            params (tuple, optional): Parameters for the WHERE clause.
-
-        Returns:
-            list: List of rows matching the conditions.
         """
         try:
             conn, cur = self.connect()
@@ -159,14 +130,6 @@ class DatabaseManager:
     def update_data(self, table_name, data, condition):
         """
         Updates data in a PostgreSQL database table.
-
-        Args:
-            table_name (str): Name of the table to update data in.
-            data (dict): Dictionary of columns and their new values.
-            condition (dict): Dictionary of conditions for the WHERE clause.
-
-        Returns:
-            bool: True if the update was successful, False otherwise.
         """
         try:
             conn, cur = self.connect()
@@ -201,12 +164,6 @@ class DatabaseManager:
         """
         Deletes data from a PostgreSQL database table.
 
-        Args:
-            table_name (str): Name of the table to delete data from.
-            condition (str): WHERE clause to identify the rows to delete.
-
-        Returns:
-            bool: True if the deletion was successful, False otherwise.
         """
         try:
             conn, cur = self.connect()
@@ -232,9 +189,6 @@ class TableInitializer:
     """
     Initializes the database tables for the application.
 
-    Args:
-        dbm (DatabaseManager): An instance of the DatabaseManager class.
-        table_name (str): The name of the table to create.  Defaults to "player_characters".
     """
     def __init__(self, dbm):
         self.dbm = dbm
@@ -316,7 +270,7 @@ class TableInitializer:
             "campaign_id": "INTEGER[]",
             "name": "TEXT UNIQUE NOT NULL",
             "description": "TEXT",
-            "npcs": "TEXT[]",
+            "npcs": "JSONB",
             "pc_known_info": "JSONB",
             "dm_notes": "JSONB"
         }

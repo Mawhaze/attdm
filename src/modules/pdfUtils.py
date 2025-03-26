@@ -1,6 +1,4 @@
 import fitz  # PyMuPDF
-import json
-import os
 import requests
 
 class PDFProcessor:
