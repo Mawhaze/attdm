@@ -39,8 +39,7 @@ class PCManager:
             if json_data:
                 # Process JSON and create PlayerCharacter object
                 player_json = self.pdfp.process_json_document(json_data)
-                print(player_json)
-
+                # print(player_json)
                 return player_json
             else:
                 print("Failed to convert PDF to JSON.")
@@ -73,7 +72,7 @@ class PCManager:
         condition = f"character_id = '{character_id}'"
         return self.dbm.delete_data(self.table_name, condition=condition)
 
-    def update_pc(self, character_id):
+    def update_pc_sheet(self, character_id):
         """
         Updates a player character's sheet information.
         """
@@ -97,20 +96,40 @@ class PCManager:
         """
         Retrieves the inventory of a player character.
         """
-
         condition = f"character_id = '{character_id}'"
         columns = column
         return self.dbm.fetch_data(self.table_name, columns=columns, condition=condition)
     
+    def select_pc(self, player_list):
+        """
+        Selects a player character from a list of characters in a campaign.
+        """
+        if not player_list:
+            print("No player characters found in this campaign.")
+            return None
+
+        while True:
+            # Display a numbered list of character names
+            for idx, player in enumerate(player_list, start=1):
+                name, _, class_level = player
+                print(f"{idx}. {name} - {class_level}")
+
+            # Prompt the user to select a character by number
+            try:
+                selected_idx = int(input("Enter the number of the character: ")) - 1
+                if 0 <= selected_idx < len(player_list):
+                    # Get the character_id of the selected character
+                    selected_player = player_list[selected_idx]
+                    print(f"Selected Player: {selected_player}")  # Debugging: Verify selected player
+                    return selected_player[1]  # Return the character_id
+                else:
+                    print("Invalid selection. Please try again.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+    
     def get_player_class_and_level(self, character_id):
         """
         Retrieves the class_level of a player character and separates it into player_class and player_level.
-
-        Args:
-            character_id (str): The ID of the character.
-
-        Returns:
-            dict: A dictionary containing the total level and a breakdown of classes and levels.
         """
          # Fetch the class_level from the database
         result = self.dbm.fetch_data(
@@ -156,10 +175,6 @@ class PCManager:
     def list_passive_stats(self, player_list):
         """
         Lists player characters sorted by passive stats (perception, investigation, insight).
-
-        Args:
-            player_list (list): A list of player tuples (player_name, character_id).
-            pcm (PCManager): An instance of the PCManager class.
         """
         # Initialize dictionaries to store stats
         passive_perception = []

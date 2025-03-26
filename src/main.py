@@ -1,11 +1,13 @@
 import json
 import os
 from dotenv import load_dotenv
-from src.modules.campaignDetails import CampaignManager, SessionManager
+from src.modules.campaignDetails import SessionManager
 from src.modules.dbManager import DatabaseManager, TableInitializer
-from src.modules.lootGen import LootManager
-from src.modules.playerCharacter import PCManager
-from src.modules.pdfUtils import PDFProcessor
+
+# The following imports are needed when debugging
+# from src.modules.lootGen import LootManager
+# from src.modules.playerCharacter import PCManager
+# from src.modules.pdfUtils import PDFProcessor
 
 
 if __name__ == "__main__":
@@ -20,17 +22,14 @@ if __name__ == "__main__":
 
 
     dbm = DatabaseManager(db_params)
-    pcm = PCManager(dbm)
-    cm = CampaignManager(dbm)
-    lm = LootManager(dbm)
     sm = SessionManager(dbm)
-    pdfp = PDFProcessor()
 
     # # PDF to JSON conversion
     # # Uncomment to test new character data
     # # character_id = "mawhaze_140320411"
     # # character_id = "mawhaze_138436365"
     # # character_id = "mawhaze_133064992"
+    # pdfp = PDFProcessor()
     # pdf_data = pdfp.get_pdf_from_url(character_id)
     # pdf2json = pdfp.convert_pdf_to_json(pdf_data)
     # with open("/mnt/c/Documents and Settings/evanc/code/project_ender/attdm/debug/character.json", "w") as f:
@@ -44,7 +43,7 @@ if __name__ == "__main__":
     # # test vars for loot table generation, update as needed
     # source_books = "TCE"
     # campaign_id = 1
-    
+    # lm = LootManager(dbm)
     # lm.get_base_loot_table()
     # loot_table = lm.csv_to_json()
     # filtered_loot = lm.add_source_loot(source_books, campaign_id)
@@ -55,12 +54,15 @@ if __name__ == "__main__":
     TableInitializer.create_campaigns_table(dbm)
     TableInitializer.create_player_character_table(dbm)
     TableInitializer.create_loot_options_table(dbm)
+    TableInitializer.create_npc_table(dbm)
+    TableInitializer.create_locations_table(dbm)
 
     # Select a campaign for the session
     campaign_id = sm.select_campaign()
     sm.session_menu(campaign_id)
 
     # # Delete a character
+    # pcm = PCManager(dbm)
     # pcm.delete_pc(character_id)
 
 

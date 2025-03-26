@@ -249,8 +249,7 @@ class TableInitializer:
             "id": "SERIAL PRIMARY KEY",
             "name": "TEXT NOT NULL",
             "dm": "TEXT NOT NULL",
-            "loot_books": "JSONB",  
-            "data": "JSONB"
+            "loot_books": "JSONB",
         }
         return dbm.create_table(table_name, columns)
 
@@ -261,7 +260,6 @@ class TableInitializer:
         """
         table_name="player_characters"
         columns = {
-            "id": "SERIAL PRIMARY KEY",
             "campaign_id": "INTEGER[]",
             "character_id": "VARCHAR(50) UNIQUE NOT NULL",
             "name": "TEXT NOT NULL",
@@ -272,17 +270,17 @@ class TableInitializer:
             "species": "VARCHAR(50)",
             "death_recap": "TEXT",
             "inventory": "JSONB",
-            "dm_notes": "JSONB"        }
+            "dm_notes": "JSONB"
+        }
         return dbm.create_table(table_name, columns)
 
-        # Create the loot table
+    # Create the loot table
     def create_loot_options_table(dbm):
         """
         Creates the loot_options table in the PostgreSQL database.
         """
         table_name="loot_options"
         columns = {
-            "id": "SERIAL PRIMARY KEY",
             "campaign_id": "INTEGER[]",
             "name": "TEXT NOT NULL",
             "rarity": "TEXT",
@@ -290,5 +288,36 @@ class TableInitializer:
             "source": "TEXT",
             "attunement": "TEXT",
             "text": "TEXT"
+        }
+        return dbm.create_table(table_name, columns)
+
+    # Create the NPC table
+    def create_npc_table(dbm):
+        """
+        Creates the npc table in the PostgreSQL database.
+        """
+        table_name="npcs"
+        columns = {
+            "campaign_id": "INTEGER[]",
+            "name": "TEXT UNIQUE NOT NULL",
+            "species": "TEXT",
+            "location": "JSONB",
+            "pc_known_info": "JSONB",
+            "dm_notes": "JSONB"
+        }
+        return dbm.create_table(table_name, columns)
+
+    def create_locations_table(dbm):
+        """
+        Creates the locations table in the PostgreSQL database.
+        """
+        table_name="locations"
+        columns = {
+            "campaign_id": "INTEGER[]",
+            "name": "TEXT UNIQUE NOT NULL",
+            "description": "TEXT",
+            "npcs": "TEXT[]",
+            "pc_known_info": "JSONB",
+            "dm_notes": "JSONB"
         }
         return dbm.create_table(table_name, columns)

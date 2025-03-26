@@ -1,5 +1,6 @@
 import os
 
+from .dmNotes import PlayerNotes, LoreNotes
 from .playerCharacter import PCManager
 from .lootGen import LootManager, LootGenerator
 
@@ -55,6 +56,8 @@ class SessionManager:
         self.lm = LootManager(dbm)
         self.pcm = PCManager(dbm)
         self.lg = LootGenerator(dbm)
+        self.pcnt = PlayerNotes(dbm)
+        self.ln = LoreNotes(dbm)
 
     def select_campaign(self):
         """
@@ -72,7 +75,6 @@ class SessionManager:
                 "name": input("Enter the campaign name: "),
                 "dm": input("Enter the DM name: "),
                 "loot_books": [],
-                "data": {}
             }
             CampaignManager.create_campaign(self, data)
             selected_campaign_id = CampaignManager.list_campaigns(self)[-1][0]
@@ -119,24 +121,30 @@ class SessionManager:
         """
         while True:
             self.table_name = "player_characters"
-            print(f"Player Characters for campaign {campaign_id}:")
+            print("Updating character sheets...")
             player_list = self.pcm.list_pc_per_campaign(campaign_id)
             if player_list:
                 for player in player_list:
+                    character_id = player[1]
+                    self.pcm.update_pc_sheet(character_id)
+                for player in player_list:
                     name, _, class_level = player
-                    short_pc_list = player
-                    print(f"{name} - {class_level}")
+                    print(f"Current part for campaign {campaign_id}")
+                    print(f"{name} - {class_level}\n")
             else:
                 print("No player characters found in this campaign.")
             
             print("Session Menu:")
+            print("0. Exit")
             print("1. Loot Options")
             print("2. Player Characters")
-            print("3. Session Notes")
-            print("4. Exit")
+            print("3. NPC Notes")
+            print("4. Location Notes")
         
             choice = input("Enter your choice: ")
-            if  choice == '1':
+            if choice == '0':
+                break
+            elif  choice == '1':
                 while True:
                     self.table_name = "loot_options"
                     print("Loot Options:")
@@ -150,30 +158,16 @@ class SessionManager:
                         break
                     if loot_choice == '1':
                         print("Select a player character to roll loot for.")
-                        # Display a numbered list of character names
-                        for idx, player in enumerate(player_list, start=1):
-                            print(f"{idx}. {player[0]}")
-                        # Prompt the user to select a character by number
-                        try:
-                            selected_idx = int(input("Enter the number of the character: ")) - 1
-                            if selected_idx < 0 or selected_idx >= len(player_list):
-                                print("Invalid selection. Please try again.")
-                                continue
-                            # Get the character_id of the selected character
-                            character_id = player_list[selected_idx][1]
-                            print(f"Rolling loot for {character_id}...")
-                        except ValueError:
-                            print("Invalid input. Please enter a number.")
+                        character_id = self.pcm.select_pc(player_list)
                         loot = self.lg.roll_loot(character_id, campaign_id)
                         print(loot)
                         for item in loot:
                             item_url = self.lg.get_item_link(item)
                             print(f"{item} - {item_url}")
                     if loot_choice == '2':
-                        print("Listing current loot sources...")
+                        print("Current loot sources:")
                         current_sources = self.lm.list_current_sources(campaign_id)
                         unique_sources = set(source for _, source in current_sources)
-                        print("Current loot sources:")
                         for source in unique_sources:
                             print(source)
                     if loot_choice == '3':
@@ -190,6 +184,7 @@ class SessionManager:
                     print("1. Add Character")
                     print("2. Update Character Sheets")
                     print("3. List Passive Stats")
+                    print("4. Add Character Notes")
 
                     pc_choice = input("Enter your choice: ")
                     if pc_choice == '0':
@@ -206,16 +201,98 @@ class SessionManager:
                         print("Updating character sheets...")
                         for player in player_list:
                             character_id = player[1]
-                            self.pcm.update_pc(character_id)
+                            self.pcm.update_pc_sheet(character_id)
                     elif pc_choice == '3':
                         print("Listing passive stats for all players in the campaign...")
                         self.pcm.list_passive_stats(player_list)
+                    elif pc_choice == '4':
+                        print("Select a player character to manage notes for.")
+                        self.pcnt.player_notes_menu(player_list)
             elif choice == '3':
-                print(f"Session Notes for campaign {campaign_id}:")
-                # TODO: Placeholder for session notes functionality
-                print("to be built")
+                while True:
+                    self.table_name = "npcs"
+                    print("\nOptions:")
+                    print("0. Back to Session Menu")
+                    print("1. Add a new NPC")
+                    print("2. List existing NPC, public notes")
+                    print("3. List existing NPC, DM notes")
+                    print("4. Edit NPC public notes")
+                    print("5. Edit NPC DM notes")
+                    note_choice = input("Enter your choice: ")
 
+                    if note_choice == '0':
+                        break    
+                    elif note_choice == '1':
+                        self.ln.create_new_npc(campaign_id, self.table_name)
+                    elif note_choice == '2':
+                        lore_field = "pc_known_info"
+                        npc_list = self.ln.list_lore_notes(campaign_id, lore_field, self.table_name)
+                        if npc_list:
+                            for npc in npc_list:
+                                name, location, pc_known_info = npc
+                                print(f"{name} - {location}\n{pc_known_info}")
+                        else:
+                            print("No NPCs found in this campaign.")
+                    elif note_choice == '3':
+                        lore_field = "dm_notes"
+                        npc_list = self.ln.list_lore_notes(campaign_id, lore_field, self.table_name)
+                        if npc_list:
+                            for npc in npc_list:
+                                name, location, dm_notes = npc
+                                print(f"{name} - {location}\nDM notes: {dm_notes}")
+                        else:
+                            print("No NPCs found in this campaign.")
+                    elif note_choice == '4':
+                        lore_name = input("Enter the NPC's name: ")
+                        lore_field = "pc_known_info"
+                        self.ln.edit_lore_notes(lore_name, lore_field, self.table_name)
+                    elif note_choice == '5':
+                        lore_name = input("Enter the NPC's name: ")
+                        lore_field = "dm_notes"
+                        self.ln.edit_lore_notes(lore_name, lore_field, self.table_name)
+                    else:
+                        print("Invalid choice. Please try again.")
             elif choice == '4':
-                break
-            else:
-                print("Invalid choice. Please try again.")
+                while True:
+                    self.table_name = "locations"
+                    print("\nOptions:")
+                    print("0. Back to Session Menu")
+                    print("1. Add a new Location")
+                    print("2. List existing Locations, public notes")
+                    print("3. List existing Locations, DM notes")
+                    print("4. Edit Location public notes")
+                    print("5. Edit Location DM notes")
+                    note_choice = input("Enter your choice: ")
+
+                    if note_choice == '0':
+                        break    
+                    elif note_choice == '1':
+                        self.ln.create_new_location(campaign_id, self.table_name)
+                    elif note_choice == '2':
+                        lore_field = "pc_known_info"
+                        location_list = self.ln.list_lore_notes(campaign_id, lore_field, self.table_name)
+                        if location_list:
+                            for location in location_list:
+                                name, description, npcs, pc_known_info = location
+                                print(f"{name}\n{description}\n{npcs}\n{pc_known_info}")
+                        else:
+                            print("No Locations found in this campaign.")
+                    elif note_choice == '3':
+                        lore_field = "dm_notes"
+                        location_list = self.ln.list_lore_notes(campaign_id, lore_field, self.table_name)
+                        if location_list:
+                            for location in location_list:
+                                name, description, npcs, dm_notes = location
+                                print(f"{name}\n{description}\n{npcs}\nDM notes:{dm_notes}")
+                        else:
+                            print("No Locations found in this campaign.")
+                    elif note_choice == '4':
+                        lore_name = input("Enter the Location's name: ")
+                        lore_field = "pc_known_info"
+                        self.ln.edit_lore_notes(lore_name, lore_field, self.table_name)
+                    elif note_choice == '5':
+                        lore_name = input("Enter the Location's name: ")
+                        lore_field = "dm_notes"
+                        self.ln.edit_lore_notes(lore_name, lore_field, self.table_name)
+                    else:
+                        print("Invalid choice. Please try again.")
