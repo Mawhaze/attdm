@@ -7,8 +7,9 @@
 
 ### Where i left off
  
-- Next to build is the API 
-- All base functionality validated via thecli menu 
+- Waiting on the Discord bot to be built for play testing
+- API endpoints have all be validated locally
+- Needs Dockerfile and Jenkinsfile
 
 ### Stack
 
@@ -18,18 +19,10 @@
 
 ### Planned Features
 
-- Pull party member info from dndbeyond by character ID
-- DB with searchable info on characters/locations/lore/etc.
-    1. Quick search for PC passive perception
-    2. pull up details on locations and NPCs
-    3. Updatable with details as the campaign goes on
-- Generate loot for a player
-    1. based on parameters from their character sheet
-        > class, level, desired equipment types, not currently in inventory
-    2. takes into account which books loot is pulled from
-    3. loot quality/value dependent on the players roll and level
-- potentially add a 'previously on...' recap that pulls a summary from a transcription of the video
+- Add a 'previously on...' recap that pulls a summary from a transcription of the video
     > stich together all the previously on into a lore book/backstory
+- For certain bigger bads/boss fights have a specific loot table to pull in addition to the the campaign table
+    > probably held in the DM notes as `boss_loot_table: {}'
 
 ### Order of Operations
 
@@ -60,21 +53,11 @@
 ## General notes
 
 - Dockerfile will need to handle the chromedriver for selenium
-- Organized by campaign
-- dndbeyond can pull up characters based on the number id in the url 
-    > https://character-service.dndbeyond.com/character/v5/character/5242429
-- csv export from 5e.tool, python hackery to sql, creates links to dndbeyond item based on item name
-- Validate books to be used in the campaign upon campaign creation and generate loot table
-- provide loot, X  amount of gold and/or gems, custom item upgrade mat/part 
-    > player specific loot table + money/upgrade items based on player roll
-- On start up, validate table structure exists
 
 ### Loot tables function
 
 - Need to set custom loot tables per campaign
-- scripts/etc to create the loot entries
-  > Need fields for item name, type, rarity, description
-- generate loot based on character and loot roll, filters for appropriate loot
+- generate loot based on character and filters for appropriate loot
 - provide DM with 3-5 options for loot and has the dm make a selection
 - sends dndbeyond link to character of dm selected loot
 
@@ -83,11 +66,11 @@
 - who has the highest passive stat and what
 - Add, delete, select characters in a campaign
 - update character info at the start of a session
+- Keep DM notes on players
 
 ### Lore Database
 
 - Track details about NPCs, world events, locations, etc
-- For certain bigger bads/boss fights have a specific loot table to pull in addition to the the campaign table
 - 
 
 ### Database Structure
