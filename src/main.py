@@ -84,6 +84,13 @@ def add_player_character(player: PlayerCharacter):
         return {"message": f"Player character {player.character_id} added to campaign {player.campaign_id}"}
     raise HTTPException(status_code=400, detail="Failed to retrieve character data")
 
+@app.get("/players/{campaign_id}/")
+def list_campaign_pcs(campaign_id: int):
+    players = pcm.list_pc_per_campaign(campaign_id)
+    if players:
+        return players
+    raise HTTPException(status_code=404, detail=f"No players found in campaign {campaign_id}")
+
 @app.put("/players/{campaign_id}/update/")
 def update_player_characters(campaign_id: int):
     player_list = pcm.list_pc_per_campaign(campaign_id)

@@ -88,9 +88,9 @@ class PCManager:
         """
         Retrieves the inventory of a player character.
         """
-        condition = f"character_id = '{character_id}'"
+        condition = "character_id = %s"
         columns = column
-        return self.dbm.fetch_data(self.table_name, columns=columns, condition=condition)
+        return self.dbm.fetch_data(self.table_name, columns=columns, condition=condition, params=(character_id,))
     
     def select_pc(self, player_list):
         """

@@ -218,11 +218,11 @@ class LootGenerator:
             rarities = ["uncommon", "rare"]
             loot_distribution = {"uncommon": 3, "rare": 2}
         elif 11 <= pl <= 15:
-            rarities = ["Rare", "Very Rare"]
-            loot_distribution = {"Rare": 3, "Very Rare": 2}
+            rarities = ["rare", "very rare"]
+            loot_distribution = {"rare": 3, "very rare": 2}
         elif 16 <= pl <= 20:
-            rarities = ["Very Rare", "Legendary"]
-            loot_distribution = {"Very Rare": 3, "Legendary": 2}
+            rarities = ["very rare", "legendary"]
+            loot_distribution = {"very rare": 3, "legendary": 2}
         else:
             print(f"Invalid player level: {pl}")
             return None
@@ -257,7 +257,8 @@ class LootGenerator:
                         or "requires attunement" in attunement and "by" not in attunement  # General attunement
                         or any(player_class.lower() in attunement for player_class in pc.keys())  # Class-specific attunement
                     ):
-                        rolled_loot.append(random_entry[0])  # Append only the item name
+                        if random_entry[0] not in pi:
+                            rolled_loot.append(random_entry[0])  # Append only the item name
                         break  # Exit the reroll loop if the item is valid
                     else:
                         # print(f"Item '{random_entry[0]}' is not compatible with the player's class. Rerolling...")
