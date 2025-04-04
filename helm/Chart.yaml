@@ -1,0 +1,6 @@
+apiVersion: v2
+name: attdm
+description: A Helm chart for deploying the attdm Docker container
+type: application
+version: 0.1.0
+appVersion: "latest"

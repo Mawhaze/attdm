@@ -23,7 +23,7 @@ class LootManager:
         self.dbm = dbm
         self.pcm = PCManager(dbm)
         self.table_name = "loot_options"
-        self.download_file_path = "/mnt/c/Documents and Settings/evanc/code/project_ender/attdm/tmp/loot_table"
+        self.download_file_path = "/tmp/loot_table"
         self.csv_file_name = "Items.csv"
         self.csv_file_path = os.path.join(self.download_file_path, self.csv_file_name)
 
@@ -31,7 +31,7 @@ class LootManager:
         """
         Simulates a user clicking a download button on a webpage using Selenium,
         """
-        url = "http://localhost:8080/items.html"
+        url = "http://localhost:5050/items.html"
 
         try:
             chrome_options = Options()

@@ -1,0 +1,33 @@
+replicaCount: 1
+
+image:
+  repository: mawhaze/attdm
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: staging.mawhaze.dev
+      paths:
+        - path: /attdm
+          pathType: Prefix
+  tls:
+    - hosts:
+        - staging.mawhaze.dev
+      secretName: staging-cert-tls
+
+env:
+  dbHost: attdm-db-postgresql.default.svc.cluster.local
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
