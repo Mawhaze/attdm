@@ -31,7 +31,7 @@ class LootManager:
         """
         Simulates a user clicking a download button on a webpage using Selenium,
         """
-        url = "http://localhost:5050/items.html"
+        url = "http://localhost:8080/items.html"
 
         try:
             chrome_options = Options()
