@@ -23,7 +23,7 @@ class LootManager:
         self.dbm = dbm
         self.pcm = PCManager(dbm)
         self.table_name = "loot_options"
-        self.download_file_path = "/tmp/loot_table"
+        self.download_file_path = "~/ender_bot/loot_table"
         self.csv_file_name = "Items.csv"
         self.csv_file_path = os.path.join(self.download_file_path, self.csv_file_name)
 
