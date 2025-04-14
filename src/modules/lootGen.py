@@ -48,6 +48,7 @@ class LootManager:
             chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
             unique_user_data_dir = "/tmp/chrome_user_data"
             chrome_options.add_argument(f"--user-data-dir={unique_user_data_dir}")
             chrome_options.add_experimental_option("prefs", {
