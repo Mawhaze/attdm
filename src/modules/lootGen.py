@@ -48,6 +48,8 @@ class LootManager:
             chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--disable-gpu")
+            unique_user_data_dir = "/tmp/chrome_user_data"
+            chrome_options.add_argument(f"--user-data-dir={unique_user_data_dir}")
             chrome_options.add_experimental_option("prefs", {
                 "download.default_directory": self.download_file_path,
                 "download.prompt_for_download": False,
