@@ -3,6 +3,9 @@ import json
 import time
 import os
 import logging
+import random
+import re
+import time
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -206,3 +209,117 @@ class LootManager:
         else:
             logging.warning(f"No sources found for campaign {campaign_id}.")
         return result if result else []
+
+class LootGenerator:
+    """
+    Containes the functions needed for generating loot for a campaign.
+    Player loot roll and level will affect rairity of loot generated.
+    Validate that the player character can use the loot and does not already have it.
+    Provides DNDB item links for player reference.
+    """
+    def __init__(self, dbm):
+        self.dbm = dbm
+        self.pcm = PCManager(dbm)
+        self.table_name = "loot_options"
+
+    def player_validation(self, name):
+        """
+        Checks the required data for the player character.
+        Takes the character_id and retrieves level and inventory data. 
+        """
+        # Get the player class and level
+        pcl = self.pcm.get_player_class_and_level(name)
+        player_class = pcl["classes"]
+        player_level = pcl["total_level"]
+        # Get the player inventory
+        player_inventory = self.pcm.get_pc_stat(name, "inventory") 
+        return player_class, player_level, player_inventory
+
+    def roll_loot(self, name, campaign_id):
+        """
+        Rolls loot for a player character based on their level, class compatibility, and campaign association.
+        Determines the rarity of loot based on the player's level range.
+        Ensures the item is compatible with the player's class for attunement and belongs to the campaign.
+        Returns a list of item names.
+        """
+        # Load the player character data
+        validation_check = self.player_validation(name)
+        pl = validation_check[1]  # Player level
+        pc = validation_check[0]  # Player class (dictionary of classes and levels)
+        pi = validation_check[2]  # Player inventory
+
+        # Determine rarities based on player level
+        if 1 <= pl <= 5:
+            rarities = ["common", "uncommon"]
+            loot_distribution = {"common": 3, "uncommon": 2}
+        elif 6 <= pl <= 10:
+            rarities = ["uncommon", "rare"]
+            loot_distribution = {"uncommon": 3, "rare": 2}
+        elif 11 <= pl <= 15:
+            rarities = ["rare", "very rare"]
+            loot_distribution = {"rare": 3, "very rare": 2}
+        elif 16 <= pl <= 20:
+            rarities = ["very rare", "legendary"]
+            loot_distribution = {"very rare": 3, "legendary": 2}
+        else:
+            print(f"Invalid player level: {pl}")
+            return None
+
+        print(f"Player level: {pl}, Rarities: {rarities}")
+
+        # Fetch loot for each rarity and roll items
+        rolled_loot = []
+        for rarity, count in loot_distribution.items():
+            entries = self.dbm.fetch_data(
+                self.table_name,
+                columns="name, type, rarity, attunement, source, text, campaign_id",
+                condition="rarity = %s AND %s = ANY(campaign_id)",
+                params=(rarity, campaign_id)
+            )
+
+            if not entries:
+                print(f"No entries found with rarity '{rarity}' for campaign ID '{campaign_id}' in table '{self.table_name}'.")
+                continue
+
+            # Roll random items for the specified count
+            for _ in range(count):
+                max_attempts = 50  # Limit the number of reroll attempts to avoid infinite loops
+                attempts = 0
+                while attempts < max_attempts:
+                    random_entry = random.choice(entries)
+
+                    # Check if the item is compatible with the player's class
+                    attunement = random_entry[3].lower()
+                    if (
+                        not attunement  # No attunement required
+                        or "requires attunement" in attunement and "by" not in attunement  # General attunement
+                        or any(player_class.lower() in attunement for player_class in pc.keys())  # Class-specific attunement
+                    ):
+                        if random_entry[0] not in pi:
+                            rolled_loot.append(random_entry[0])  # Append only the item name
+                        break  # Exit the reroll loop if the item is valid
+                    else:
+                        # print(f"Item '{random_entry[0]}' is not compatible with the player's class. Rerolling...")
+                        attempts += 1
+
+                    if attempts == max_attempts:
+                        print(f"Failed to find a compatible item for rarity '{rarity}' after {max_attempts} attempts.")
+
+        return rolled_loot
+    
+    def get_item_link(self, item_name):
+        """
+        Generates a link to the D&D Beyond page for a specific item.
+        """
+        # Format item name for the URL
+        item_name = re.sub(r"\s*\(.*?\)", "", item_name).strip()
+        item_name = item_name.replace(" ", "-").replace("'", "").split(",", 1)[0].lower()
+
+        # Check if the item starts with a "+" followed by a number
+        if item_name.startswith("+") and item_name[1].isdigit():
+            # Move the "+number" to the end without the "+" sign
+            parts = item_name.split("-", 1)
+            item_name = f"{parts[1]}-{parts[0][1:]}"
+
+        url = f"https://www.dndbeyond.com/magic-items/{item_name}"
+        return url
