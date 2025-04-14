@@ -1,5 +1,14 @@
 import json
 import psycopg2
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(
+    filename=os.getenv("LOG_FILE", "/tmp/logs/attdm.log"),
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 class DatabaseManager:
     """
@@ -18,9 +27,10 @@ class DatabaseManager:
         try:
             self.conn = psycopg2.connect(**self.db_params)
             self.cur = self.conn.cursor()
+            logging.info("Database connection established successfully.")
             return self.conn, self.cur
         except psycopg2.Error as e:
-            print(f"Error connecting to the database: {e}")
+            logging.error(f"Error connecting to the database: {e}")
             return None, None
 
     def close(self):
@@ -29,8 +39,10 @@ class DatabaseManager:
         """
         if hasattr(self, 'cur') and self.cur:
             self.cur.close()
+            logging.info("Database cursor closed.")
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
+            logging.info("Database connection closed.")
 
     def create_table(self, table_name, columns):
         """
@@ -47,15 +59,15 @@ class DatabaseManager:
             cur.execute(create_table_query)
             conn.commit()
 
-            print(f"Table '{table_name}' created successfully.")
+            logging.info(f"Table '{table_name}' created successfully.")
             return True
 
         except psycopg2.Error as e:
-            print(f"Error creating table '{table_name}': {e}")
+            logging.error(f"Error creating table '{table_name}': {e}")
             return False
         finally:
             self.close()
-    
+
     def insert_data(self, table_name, data):
         """
         Inserts data into a PostgreSQL database table.
@@ -75,18 +87,17 @@ class DatabaseManager:
             insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
 
             cur.execute(insert_query, tuple(data.values()))
-
             conn.commit()
 
-            print(f"Data inserted successfully into table '{table_name}'.")
+            logging.info(f"Data inserted successfully into table '{table_name}'.")
             return True
 
         except psycopg2.Error as e:
-            print(f"Error inserting data: {e}")
+            logging.error(f"Error inserting data into table '{table_name}': {e}")
             return False
         finally:
             self.close()
-    
+
     def fetch_data(self, table_name, columns="*", condition=None, params=None):
         """
         Fetches data from a PostgreSQL database table.
@@ -117,12 +128,13 @@ class DatabaseManager:
                     params = tuple(values)  # Update params with processed values
 
             cur.execute(query, params)
-
             rows = cur.fetchall()
+
+            logging.info(f"Data fetched successfully from table '{table_name}'.")
             return rows
 
         except psycopg2.Error as e:
-            print(f"Error fetching data: {e}")
+            logging.error(f"Error fetching data from table '{table_name}': {e}")
             return None
         finally:
             self.close()
@@ -151,11 +163,11 @@ class DatabaseManager:
             cur.execute(query, set_values + where_values)
             conn.commit()
 
-            print(f"Data updated successfully in table '{table_name}'.")
+            logging.info(f"Data updated successfully in table '{table_name}'.")
             return True
 
         except psycopg2.Error as e:
-            print(f"Error updating data: {e}")
+            logging.error(f"Error updating data in table '{table_name}': {e}")
             return False
         finally:
             self.close()
@@ -163,7 +175,6 @@ class DatabaseManager:
     def delete_data(self, table_name, condition):
         """
         Deletes data from a PostgreSQL database table.
-
         """
         try:
             conn, cur = self.connect()
@@ -173,14 +184,13 @@ class DatabaseManager:
             delete_query = f"DELETE FROM {table_name} WHERE {condition}"
 
             cur.execute(delete_query)
-
             conn.commit()
 
-            print(f"Data '{condition}' successfully from table '{table_name}'.")
+            logging.info(f"Data deleted successfully from table '{table_name}' with condition: {condition}.")
             return True
 
         except psycopg2.Error as e:
-            print(f"Error deleting data: {e}")
+            logging.error(f"Error deleting data from table '{table_name}': {e}")
             return False
         finally:
             self.close()
@@ -188,7 +198,6 @@ class DatabaseManager:
 class TableInitializer:
     """
     Initializes the database tables for the application.
-
     """
     def __init__(self, dbm):
         self.dbm = dbm
@@ -198,13 +207,14 @@ class TableInitializer:
         """
         Creates the campaigns table in the PostgreSQL database.
         """
-        table_name="campaigns"
+        table_name = "campaigns"
         columns = {
             "id": "SERIAL PRIMARY KEY",
             "name": "TEXT NOT NULL",
             "dm": "TEXT NOT NULL",
             "loot_books": "JSONB",
         }
+        logging.info(f"Creating table '{table_name}'.")
         return dbm.create_table(table_name, columns)
 
     # Create the player_characters table
@@ -212,7 +222,7 @@ class TableInitializer:
         """
         Creates the player_characters table in the PostgreSQL database.
         """
-        table_name="player_characters"
+        table_name = "player_characters"
         columns = {
             "campaign_id": "INTEGER[]",
             "character_id": "VARCHAR(50) UNIQUE NOT NULL",
@@ -226,6 +236,7 @@ class TableInitializer:
             "inventory": "JSONB",
             "dm_notes": "JSONB"
         }
+        logging.info(f"Creating table '{table_name}'.")
         return dbm.create_table(table_name, columns)
 
     # Create the loot table
@@ -233,7 +244,7 @@ class TableInitializer:
         """
         Creates the loot_options table in the PostgreSQL database.
         """
-        table_name="loot_options"
+        table_name = "loot_options"
         columns = {
             "campaign_id": "INTEGER[]",
             "name": "TEXT NOT NULL",
@@ -243,6 +254,7 @@ class TableInitializer:
             "attunement": "TEXT",
             "text": "TEXT"
         }
+        logging.info(f"Creating table '{table_name}'.")
         return dbm.create_table(table_name, columns)
 
     # Create the NPC table
@@ -250,7 +262,7 @@ class TableInitializer:
         """
         Creates the npc table in the PostgreSQL database.
         """
-        table_name="npcs"
+        table_name = "npcs"
         columns = {
             "campaign_id": "INTEGER[]",
             "name": "TEXT UNIQUE NOT NULL",
@@ -259,13 +271,14 @@ class TableInitializer:
             "pc_known_info": "JSONB",
             "dm_notes": "JSONB"
         }
+        logging.info(f"Creating table '{table_name}'.")
         return dbm.create_table(table_name, columns)
 
     def create_locations_table(dbm):
         """
         Creates the locations table in the PostgreSQL database.
         """
-        table_name="locations"
+        table_name = "locations"
         columns = {
             "campaign_id": "INTEGER[]",
             "name": "TEXT UNIQUE NOT NULL",
@@ -274,4 +287,5 @@ class TableInitializer:
             "pc_known_info": "JSONB",
             "dm_notes": "JSONB"
         }
+        logging.info(f"Creating table '{table_name}'.")
         return dbm.create_table(table_name, columns)

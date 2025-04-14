@@ -1,9 +1,8 @@
 import csv
 import json
-import random
 import time
-import re
-import os 
+import os
+import logging
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +12,12 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from src.modules.playerCharacter import PCManager
 
+# Configure logging
+logging.basicConfig(
+    filename=os.getenv("LOG_FILE", "/tmp/logs/attdm.log"),
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 class LootManager:
     """
@@ -29,9 +34,12 @@ class LootManager:
 
     def get_base_loot_table(self):
         """
-        Simulates a user clicking a download button on a webpage using Selenium,
+        Downloads the base loot table from the specified URL using Selenium.
         """
-        url = "http://localhost:8080/items.html"
+        url = os.getenv("BASE_LOOT_TABLE_URL")
+        if not url:
+            logging.error("BASE_LOOT_TABLE_URL environment variable is not set.")
+            return False
 
         try:
             chrome_options = Options()
@@ -44,56 +52,78 @@ class LootManager:
                 "safebrowsing.enabled": False
             })
 
+            logging.info("Initializing ChromeDriver...")
             driver = webdriver.Chrome(options=chrome_options)
-            driver.get(url)
-            if "5etools" in driver.title: 
-                print("Page loaded successfully.")
-            else:
-                print("Page did not load successfully.")
+            logging.info("ChromeDriver initialized successfully.")
 
+            logging.info(f"Navigating to URL: {url}")
+            driver.get(url)
+
+            if "5etools" in driver.title:
+                logging.info("Page loaded successfully.")
+            else:
+                logging.warning(f"Page did not load successfully. Title: {driver.title}")
+
+            logging.info("Waiting for table view button...")
             table_view_button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "//*[@id='btn-show-table']"))
             )
             table_view_button.click()
-            print("Table view button clicked successfully.")
+            logging.info("Table view button clicked successfully.")
 
+            logging.info("Waiting for download button...")
             download_button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "/html/body/div[4]/div/div[1]/div[4]/button[1]"))
             )
             download_button.click()
-            print("Download button clicked successfully.")
+            logging.info("Download button clicked successfully.")
 
             # Wait for the download to complete
+            logging.info("Waiting for the download to complete...")
             time.sleep(5)
 
-            return True
+            # Check if the file exists
+            if os.path.isfile(self.csv_file_path):
+                logging.info(f"File downloaded successfully: {self.csv_file_path}")
+                return True
+            else:
+                logging.error(f"File not found after download attempt: {self.csv_file_path}")
+                return False
 
         except Exception as e:
-            print(f"Error during download: {e}")
+            logging.error(f"Error during download: {e}")
             return False
 
         finally:
-            if driver:
+            if 'driver' in locals():
                 driver.quit()
-            
+
     def csv_to_json(self):
         """
         Converts a CSV file to a JSON object.
         """
         if not os.path.isfile(self.csv_file_path):
-            print("File not found, or is not a valid file.")
-            print(self.csv_file_path)
-            return
+            logging.error(f"File not found: {self.csv_file_path}")
+            return None
 
         data = []
-        with open(self.csv_file_path, 'r') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                data.append(row)
-        
-        json_data = json.dumps(data, indent=4)
-        print("JSON data converted successfully.")
-        return json_data
+        try:
+            with open(self.csv_file_path, 'r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                for row in csv_reader:
+                    data.append(row)
+
+            if not data:
+                logging.warning("CSV file is empty or contains no valid rows.")
+                return None
+
+            json_data = json.dumps(data, indent=4)
+            logging.info("JSON data converted successfully.")
+            return json_data
+
+        except Exception as e:
+            logging.error(f"Error reading CSV file: {e}")
+            return None
 
     def add_source_loot(self, source_books, campaign_id):
         """
@@ -101,8 +131,7 @@ class LootManager:
         Cleans up the item entries.
         """
         if not os.path.isfile(self.csv_file_path):
-            print("File not found, or is not a valid file.")
-            print("Recreating loot table...")
+            logging.warning("File not found. Recreating loot table...")
             self.get_base_loot_table()
 
         target_key = "Source"
@@ -110,6 +139,9 @@ class LootManager:
         filtered_items = []
 
         json_data = self.csv_to_json()
+        if not json_data:
+            logging.error("Failed to convert CSV to JSON. Aborting.")
+            return []
 
         def search(data):
             if isinstance(data, dict):
@@ -159,9 +191,9 @@ class LootManager:
                 # Item does not exist, insert it as a new entry
                 self.dbm.insert_data(self.table_name, lowercase_item)
 
-        print("Loot table generated successfully and added to the database.")
+        logging.info("Loot table generated successfully and added to the database.")
         return filtered_items
-    
+
     def list_current_sources(self, campaign_id):
         """
         Lists the source books for a campaign.
@@ -169,119 +201,8 @@ class LootManager:
         columns = "name, source"
         condition = "campaign_id @> %s"
         result = self.dbm.fetch_data(self.table_name, columns=columns, condition=condition, params=([campaign_id],))
-        return result if result else []
-
-
-class LootGenerator:
-    """
-    Containes the functions needed for generating loot for a campaign.
-    Player loot roll and level will affect rairity of loot generated.
-    Validate that the player character can use the loot and does not already have it.
-    Provides DNDB item links for player reference.
-    """
-    def __init__(self, dbm):
-        self.dbm = dbm
-        self.pcm = PCManager(dbm)
-        self.table_name = "loot_options"
-
-    def player_validation(self, name):
-        """
-        Checks the required data for the player character.
-        Takes the character_id and retrieves level and inventory data. 
-        """
-        # Get the player class and level
-        pcl = self.pcm.get_player_class_and_level(name)
-        player_class = pcl["classes"]
-        player_level = pcl["total_level"]
-        # Get the player inventory
-        player_inventory = self.pcm.get_pc_stat(name, "inventory") 
-        return player_class, player_level, player_inventory
-
-    def roll_loot(self, name, campaign_id):
-        """
-        Rolls loot for a player character based on their level, class compatibility, and campaign association.
-        Determines the rarity of loot based on the player's level range.
-        Ensures the item is compatible with the player's class for attunement and belongs to the campaign.
-        Returns a list of item names.
-        """
-        # Load the player character data
-        validation_check = self.player_validation(name)
-        pl = validation_check[1]  # Player level
-        pc = validation_check[0]  # Player class (dictionary of classes and levels)
-        pi = validation_check[2]  # Player inventory
-
-        # Determine rarities based on player level
-        if 1 <= pl <= 5:
-            rarities = ["common", "uncommon"]
-            loot_distribution = {"common": 3, "uncommon": 2}
-        elif 6 <= pl <= 10:
-            rarities = ["uncommon", "rare"]
-            loot_distribution = {"uncommon": 3, "rare": 2}
-        elif 11 <= pl <= 15:
-            rarities = ["rare", "very rare"]
-            loot_distribution = {"rare": 3, "very rare": 2}
-        elif 16 <= pl <= 20:
-            rarities = ["very rare", "legendary"]
-            loot_distribution = {"very rare": 3, "legendary": 2}
+        if result:
+            logging.info(f"Sources for campaign {campaign_id}: {result}")
         else:
-            print(f"Invalid player level: {pl}")
-            return None
-
-        print(f"Player level: {pl}, Rarities: {rarities}")
-
-        # Fetch loot for each rarity and roll items
-        rolled_loot = []
-        for rarity, count in loot_distribution.items():
-            entries = self.dbm.fetch_data(
-                self.table_name,
-                columns="name, type, rarity, attunement, source, text, campaign_id",
-                condition="rarity = %s AND %s = ANY(campaign_id)",
-                params=(rarity, campaign_id)
-            )
-
-            if not entries:
-                print(f"No entries found with rarity '{rarity}' for campaign ID '{campaign_id}' in table '{self.table_name}'.")
-                continue
-
-            # Roll random items for the specified count
-            for _ in range(count):
-                max_attempts = 50  # Limit the number of reroll attempts to avoid infinite loops
-                attempts = 0
-                while attempts < max_attempts:
-                    random_entry = random.choice(entries)
-
-                    # Check if the item is compatible with the player's class
-                    attunement = random_entry[3].lower()
-                    if (
-                        not attunement  # No attunement required
-                        or "requires attunement" in attunement and "by" not in attunement  # General attunement
-                        or any(player_class.lower() in attunement for player_class in pc.keys())  # Class-specific attunement
-                    ):
-                        if random_entry[0] not in pi:
-                            rolled_loot.append(random_entry[0])  # Append only the item name
-                        break  # Exit the reroll loop if the item is valid
-                    else:
-                        # print(f"Item '{random_entry[0]}' is not compatible with the player's class. Rerolling...")
-                        attempts += 1
-
-                    if attempts == max_attempts:
-                        print(f"Failed to find a compatible item for rarity '{rarity}' after {max_attempts} attempts.")
-
-        return rolled_loot
-    
-    def get_item_link(self, item_name):
-        """
-        Generates a link to the D&D Beyond page for a specific item.
-        """
-        # Format item name for the URL
-        item_name = re.sub(r"\s*\(.*?\)", "", item_name).strip()
-        item_name = item_name.replace(" ", "-").replace("'", "").split(",", 1)[0].lower()
-
-        # Check if the item starts with a "+" followed by a number
-        if item_name.startswith("+") and item_name[1].isdigit():
-            # Move the "+number" to the end without the "+" sign
-            parts = item_name.split("-", 1)
-            item_name = f"{parts[1]}-{parts[0][1:]}"
-
-        url = f"https://www.dndbeyond.com/magic-items/{item_name}"
-        return url
+            logging.warning(f"No sources found for campaign {campaign_id}.")
+        return result if result else []

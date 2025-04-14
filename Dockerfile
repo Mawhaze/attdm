@@ -24,7 +24,8 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir -p /tmp/loot_table
+RUN mkdir -p /tmp/loot_table \
+    && mkdir -p /tmp/logs
 
 COPY . .
 
