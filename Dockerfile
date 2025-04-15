@@ -25,7 +25,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /tmp/loot_table \
-    && mkdir -p /tmp/logs
+    && mkdir -p /tmp/logs \
+    && mkdir -p /tmp/chrome_user_data
 
 COPY . .
 
