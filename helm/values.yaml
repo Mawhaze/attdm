@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
-  - name: docker-auth-secret
+  - name: docker-auth
 
 service:
   type: ClusterIP
@@ -18,9 +18,9 @@ ingress:
   annotations: 
     nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
-    - host: staging.mawhaze.dev
+    - host: attdm.staging.mawhaze.dev
       paths:
-        - path: /attdm
+        - path: /
           pathType: Prefix
   tls:
     - hosts:
@@ -29,6 +29,7 @@ ingress:
 
 env:
   dbHost: attdm-db-postgresql.default.svc.cluster.local
+  lootTableUrl: 5etools.staging.mawhaze.dev/items.html
 
 resources: {}
 nodeSelector: {}
