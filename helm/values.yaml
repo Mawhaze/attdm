@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: mawhaze/attdm
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets:
   - name: docker-auth
@@ -29,7 +29,7 @@ ingress:
 
 env:
   dbHost: attdm-db-postgresql.default.svc.cluster.local
-  lootTableUrl: 5etools.staging.mawhaze.dev/items.html
+  lootTableUrl: https://5etools.staging.mawhaze.dev/items.html
 
 resources: {}
 nodeSelector: {}
