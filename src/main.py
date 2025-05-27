@@ -21,7 +21,7 @@ db_params = {
 }
 
 # Initialize managers
-dbm = DatabaseManager(db_params)  # Replace with your DatabaseManager instance
+dbm = DatabaseManager(db_params)
 pcm = PCManager(dbm)
 lm = LootManager(dbm)
 lg = LootGenerator(dbm)
@@ -115,6 +115,15 @@ def update_player_characters(campaign_id: int):
         pcm.update_pc_sheet(character_id)
     logging.info(f"Player character sheets updated for campaign {campaign_id}")
     return {"message": "Player character sheets updated successfully"}
+
+@app.delete("/players/{campaign_id}/delete")
+def delete_player_character(character_id: str):
+    deleted_pc = pcm.delete_pc(character_id)
+    if deleted_pc is True:
+        logging.info(f"Deleted character: {character_id}")
+        return {"message": f"{character_id} successfully deleted."}
+    logging.warning(f"Character ID: {character_id} is invalid, please select an active ID.")
+    raise HTTPException(status_code=404, detail=f"Character ID {character_id} does not exist to delete")
 
 @app.get("/players/{campaign_id}/passive-stats/")
 def list_passive_stats(campaign_id: int):

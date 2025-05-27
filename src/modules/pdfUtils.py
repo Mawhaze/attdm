@@ -1,4 +1,5 @@
 import fitz  # PyMuPDF
+import logging
 import requests
 
 class PDFProcessor:
@@ -6,7 +7,7 @@ class PDFProcessor:
         self.keys = {
             "49.46,": "name",
             "272.72, 77.16, 524.02, 88.15": "species",
-            "272.72, 51.12, 508.74, 62.11": "class_level",
+            "272.72, 51.12": "class_level",
             "43.36, 627.18, 58.48, 642.12": "passive_perception",
             "43.54, 688.03, 58.65, 702.97": "passive_investigation",
             "43.37, 657.18, 58.48, 672.12": "passive_insight",
@@ -70,12 +71,16 @@ class PDFProcessor:
                     field_value = block[4].strip().split("\n")[0]
                     # # Enable for debugging
                     # # Add data to debug lists regardless of keys filter
+                    debug_info = {
+                        "location_value_pairs": []
+                    }
                     # debug_info["all_field_locations"].append(field_location)
                     # debug_info["all_field_values"].append(field_value)
-                    # debug_info["location_value_pairs"].append({
-                    #     "location": field_location,
-                    #     "value": field_value
-                    # })
+                    debug_info["location_value_pairs"].append({
+                        "location": field_location,
+                        "value": field_value
+                    })
+                    logging.debug(f"PDF debug info: {debug_info}")
                     for key_prefix, desired_key in self.keys.items():
                         if field_location.startswith(key_prefix):
                             if desired_key == "inventory":

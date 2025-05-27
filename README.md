@@ -2,21 +2,10 @@
 
 ## Python project to handel some DM activities
 
-> This requires a local postgreSQL container and a 5e.tools container until initial testing is complete.
-> After initial testing, app/db/5e.tools/discord_bot will be moved to k8s
+> This requires a local postgreSQL container and a 5e.tools container.
 
 ### Where i left off
  
-- Waiting on the Discord bot to be built for play testing
-- API endpoints have all be validated locally
-- Needs Dockerfile and Jenkinsfile
-
-### Stack
-
-- PostgreSQL for datastore
-- Python for data manipulation and FastAPI frontend
-- UI will be a discord bot
-
 ### Planned Features
 
 - Add a 'previously on...' recap that pulls a summary from a transcription of the video
@@ -52,11 +41,8 @@
 
 ## General notes
 
-- Dockerfile will need to handle the chromedriver for selenium
-
 ### Loot tables function
 
-- Need to set custom loot tables per campaign
 - generate loot based on character and filters for appropriate loot
 - provide DM with 3-5 options for loot and has the dm make a selection
 - sends dndbeyond link to character of dm selected loot
