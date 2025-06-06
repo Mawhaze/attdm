@@ -95,8 +95,6 @@ class SessionManager:
         while True:
             try:
                 logging.info("Displaying campaign list for selection.")
-                print("ID: 0 | Name: Create New Campaign")
-                print("\n".join(campaign_output))
                 campaign_id = int(input("Enter the ID of the campaign you want to select: "))
                 # Check if the selected ID exists in the campaign list
                 if any(campaign_id == campaign[0] for campaign in campaign_list):
@@ -122,88 +120,3 @@ class SessionManager:
             except ValueError:
                 logging.error("Invalid input. Expected a number.")
                 print("Please enter a valid number.")
-
-    def session_menu(self, campaign_id):
-        """
-        Displays the session menu for the selected campaign.
-        """
-        while True:
-            self.table_name = "player_characters"
-            logging.info(f"Updating character sheets for campaign ID {campaign_id}.")
-            player_list = self.pcm.list_pc_per_campaign(campaign_id)
-            if player_list:
-                for player in player_list:
-                    character_id = player[1]
-                    self.pcm.update_pc_sheet(character_id)
-                for player in player_list:
-                    name, _, class_level = player
-                    logging.info(f"Current party for campaign {campaign_id}: {name} - {class_level}")
-                    print(f"Current party for campaign {campaign_id}")
-                    print(f"{name} - {class_level}\n")
-            else:
-                logging.warning(f"No player characters found in campaign {campaign_id}.")
-                print("No player characters found in this campaign.")
-            
-            print("Session Menu:")
-            print("0. Exit")
-            print("1. Loot Options")
-            print("2. Player Characters")
-            print("3. NPC Notes")
-            print("4. Location Notes")
-        
-            choice = input("Enter your choice: ")
-            if choice == '0':
-                logging.info("Exiting session menu.")
-                break
-            elif choice == '1':
-                self.handle_loot_options(campaign_id, player_list)
-            elif choice == '2':
-                self.handle_player_characters(campaign_id, player_list)
-            elif choice == '3':
-                self.handle_npc_notes(campaign_id)
-            elif choice == '4':
-                self.handle_location_notes(campaign_id)
-            else:
-                logging.warning(f"Invalid choice entered: {choice}")
-                print("Invalid choice. Please try again.")
-
-    def handle_loot_options(self, campaign_id, player_list):
-        """
-        Handles the loot options menu.
-        """
-        while True:
-            self.table_name = "loot_options"
-            print("Loot Options:")
-            print("0. Back")
-            print("1. Roll Loot")
-            print("2. List Current Loot Sources")
-            print("3. Add Loot Source")
-
-            loot_choice = input("Enter your choice: ")
-            if loot_choice == '0':
-                break
-            elif loot_choice == '1':
-                logging.info("Rolling loot for a player character.")
-                print("Select a player character to roll loot for.")
-                character_id = self.pcm.select_pc(player_list)
-                loot = self.lg.roll_loot(character_id, campaign_id)
-                print(loot)
-                for item in loot:
-                    item_url = self.lg.get_item_link(item)
-                    print(f"{item} - {item_url}")
-            elif loot_choice == '2':
-                logging.info("Listing current loot sources.")
-                print("Current loot sources:")
-                current_sources = self.lm.list_current_sources(campaign_id)
-                unique_sources = set(source for _, source in current_sources)
-                for source in unique_sources:
-                    print(source)
-            elif loot_choice == '3':
-                logging.info("Adding new loot sources.")
-                print("Choose a source book to add, separated by commas.")
-                print("DMG'24, ERLW, PHB'24, TCE, XGE")
-                source_books = input("Enter source books: ").split(",")
-                self.lm.add_source_loot(source_books, campaign_id)
-            else:
-                logging.warning(f"Invalid loot choice entered: {loot_choice}")
-                print("Invalid choice. Please try again.")

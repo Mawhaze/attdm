@@ -80,10 +80,10 @@ class DatabaseManager:
             # Convert JSONB columns to JSON strings
             for key, value in data.items():
                 if isinstance(value, (dict, list)) and key != "campaign_id":
-                    data[key] = json.dumps(value)  # Convert to JSON string
+                    data[key] = json.dumps(value)
 
             columns = ", ".join(data.keys())
-            values = ", ".join(["%s"] * len(data))  # Use placeholders for parameterized query
+            values = ", ".join(["%s"] * len(data))
             insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
 
             cur.execute(insert_query, tuple(data.values()))
@@ -110,14 +110,12 @@ class DatabaseManager:
             query = f"SELECT {columns} FROM {table_name}"
             if condition:
                 if isinstance(condition, str):
-                    # Use the string condition directly
                     query += f" WHERE {condition}"
                 elif isinstance(condition, dict):
-                    # Process dictionary conditions
                     where_clauses = []
                     values = []
                     for key, value in condition.items():
-                        if isinstance(value, list):  # Handle array conditions
+                        if isinstance(value, list):
                             where_clauses.append(f"{key} @> %s")
                             values.append(value)
                         else:
@@ -125,7 +123,7 @@ class DatabaseManager:
                             values.append(value)
                     where_clause = " AND ".join(where_clauses)
                     query += f" WHERE {where_clause}"
-                    params = tuple(values)  # Update params with processed values
+                    params = tuple(values)
 
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -148,18 +146,14 @@ class DatabaseManager:
             if not conn:
                 return False
 
-            # Build the SET clause
             set_clause = ", ".join([f"{key} = %s" for key in data.keys()])
             set_values = list(data.values())
 
-            # Build the WHERE clause
             where_clause = " AND ".join([f"{key} = %s" for key in condition.keys()])
             where_values = list(condition.values())
 
-            # Combine the query
             query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
 
-            # Execute the query
             cur.execute(query, set_values + where_values)
             conn.commit()
 
@@ -203,7 +197,7 @@ class TableInitializer:
         self.dbm = dbm
 
     # Create the campaigns table
-    def create_campaigns_table(dbm):
+    def create_campaigns_table(self):
         """
         Creates the campaigns table in the PostgreSQL database.
         """
@@ -215,10 +209,10 @@ class TableInitializer:
             "loot_books": "JSONB",
         }
         logging.info(f"Creating table '{table_name}'.")
-        return dbm.create_table(table_name, columns)
+        return self.dbm.create_table(table_name, columns)
 
     # Create the player_characters table
-    def create_player_character_table(dbm):
+    def create_player_character_table(self):
         """
         Creates the player_characters table in the PostgreSQL database.
         """
@@ -237,10 +231,10 @@ class TableInitializer:
             "dm_notes": "JSONB"
         }
         logging.info(f"Creating table '{table_name}'.")
-        return dbm.create_table(table_name, columns)
+        return self.dbm.create_table(table_name, columns)
 
     # Create the loot table
-    def create_loot_options_table(dbm):
+    def create_loot_options_table(self):
         """
         Creates the loot_options table in the PostgreSQL database.
         """
@@ -255,10 +249,10 @@ class TableInitializer:
             "text": "TEXT"
         }
         logging.info(f"Creating table '{table_name}'.")
-        return dbm.create_table(table_name, columns)
+        return self.dbm.create_table(table_name, columns)
 
     # Create the NPC table
-    def create_npc_table(dbm):
+    def create_npc_table(self):
         """
         Creates the npc table in the PostgreSQL database.
         """
@@ -272,9 +266,9 @@ class TableInitializer:
             "dm_notes": "JSONB"
         }
         logging.info(f"Creating table '{table_name}'.")
-        return dbm.create_table(table_name, columns)
+        return self.dbm.create_table(table_name, columns)
 
-    def create_locations_table(dbm):
+    def create_locations_table(self):
         """
         Creates the locations table in the PostgreSQL database.
         """
@@ -288,4 +282,4 @@ class TableInitializer:
             "dm_notes": "JSONB"
         }
         logging.info(f"Creating table '{table_name}'.")
-        return dbm.create_table(table_name, columns)
+        return self.dbm.create_table(table_name, columns)

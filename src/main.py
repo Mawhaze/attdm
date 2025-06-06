@@ -26,13 +26,14 @@ pcm = PCManager(dbm)
 lm = LootManager(dbm)
 lg = LootGenerator(dbm)
 nm = NotesManager(dbm)
+ti = TableInitializer(dbm)
 
 # # Validate tables, create if necessary
-TableInitializer.create_campaigns_table(dbm)
-TableInitializer.create_player_character_table(dbm)
-TableInitializer.create_loot_options_table(dbm)
-TableInitializer.create_npc_table(dbm)
-TableInitializer.create_locations_table(dbm)
+ti.create_campaigns_table()
+ti.create_player_character_table()
+ti.create_loot_options_table()
+ti.create_npc_table()
+ti.create_locations_table()
 
 # Configure Logging
 logging.basicConfig(
