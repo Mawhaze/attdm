@@ -113,6 +113,7 @@ def update_player_characters(campaign_id: int):
         raise HTTPException(status_code=404, detail="No player characters found in this campaign")
     for player in player_list:
         character_id = player[1]
+        logging.info(f"Updating player: {player}, {character_id}")
         pcm.update_pc_sheet(character_id)
     logging.info(f"Player character sheets updated for campaign {campaign_id}")
     return {"message": "Player character sheets updated successfully"}

@@ -38,7 +38,7 @@ class NotesManager:
         data = {lore_field: serialized_notes}
         return self.dbm.update_data(table_name, data, condition)
     
-    def create_lore_item(self, campaign_id, lore_name, table_name):
+    def create_lore_item(self, campaign_id, lore_field, lore_name, lore_desc, table_name):
         """
         Creates an entry on either the NPC or Locations table
         """
@@ -46,4 +46,12 @@ class NotesManager:
             "campaign_id": campaign_id,
             "name": lore_name,
         }
+        if lore_field == "npcs":
+            data.update({
+                "species": lore_desc
+            })
+        elif lore_field == "locations":
+            data.update({
+                "description": lore_desc
+            })
         return self.dbm.insert_data(table_name, data)
