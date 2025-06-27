@@ -9,7 +9,7 @@ class PDFProcessor:
             "272.72, 77.16, 524.02, 88.15": "species",
             "272.72, 51.12": "class_level",
             "43.36, 627.18, 58.48, 642.12": "passive_perception",
-            "43.54, 688.03, 58.65, 702.97": "passive_investigation",
+            "702.97": "passive_investigation",
             "43.37, 657.18, 58.48, 672.12": "passive_insight",
             "114.18": "inventory",
             "351.5": "inventory",
@@ -82,7 +82,7 @@ class PDFProcessor:
                     })
                     logging.debug(f"PDF debug info: {debug_info}")
                     for key_prefix, desired_key in self.keys.items():
-                        if field_location.startswith(key_prefix):
+                        if field_location.startswith(key_prefix) or field_location.endswith(key_prefix):
                             if desired_key == "inventory":
                                 if "inventory" not in processed_data:
                                     processed_data["inventory"] = []
