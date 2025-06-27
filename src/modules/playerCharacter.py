@@ -170,30 +170,31 @@ class PCManager:
             "classes": class_breakdown
         }
 
-    def list_passive_stats(self, player_list):
+    def list_passive_stats(self, player_list, stat_name):
         """
         Lists player characters sorted by passive stats (perception, investigation, insight).
         """
         logging.info("Listing passive stats for player characters.")
-        passive_perception = []
-        passive_investigation = []
-        passive_insight = []
-
+        valid_stats = {
+            "perception": "passive_perception",
+            "investigation": "passive_investigation",
+            "insight": "passive_insight"
+        }
+        if stat_name not in valid_stats:
+            logging.error(f"Invalid stat section, {stat_name}. Must be one of: {list(valid_stats.keys())}")
+            return []
+        stat_column = valid_stats[stat_name]
+        stat_list = []
+        
         for player_name, character_id, _ in player_list:
             try:
-                perception = self.get_pc_stat(character_id, "passive_perception")[0][0]
-                investigation = self.get_pc_stat(character_id, "passive_investigation")[0][0]
-                insight = self.get_pc_stat(character_id, "passive_insight")[0][0]
-
-                passive_perception.append((player_name, perception))
-                passive_investigation.append((player_name, investigation))
-                passive_insight.append((player_name, insight))
+                stat_value = self.get_pc_stat(character_id, stat_column)[0][0]
+                if stat_value is None:
+                    logging.warning(f"{player_name} has no value for {stat_column}")
+                stat_list.append((player_name, stat_value))
             except Exception as e:
-                logging.error(f"Error retrieving stats for {player_name} (ID: {character_id}): {e}")
+                logging.error(f"Error retrieving {stat_column} for {player_name} (ID: {character_id}): {e}")
 
-        passive_perception.sort(key=lambda x: x[1], reverse=True)
-        passive_investigation.sort(key=lambda x: x[1], reverse=True)
-        passive_insight.sort(key=lambda x: x[1], reverse=True)
-
-        logging.info("Passive stats listed successfully.")
-        return passive_perception, passive_investigation, passive_insight
+        stat_list.sort(key=lambda x: (x[1] is not None, x[1]), reverse=True)
+        logging.info(f"Passive stat {stat_name} listed successfully.")
+        return stat_list

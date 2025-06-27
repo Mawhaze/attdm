@@ -128,12 +128,12 @@ def delete_player_character(character_id: str):
     raise HTTPException(status_code=404, detail=f"Character ID {character_id} does not exist to delete")
 
 @app.get("/players/{campaign_id}/passive-stats/")
-def list_passive_stats(campaign_id: int):
+def list_passive_stats(campaign_id: int, stat_name: str):
     player_list = pcm.list_pc_per_campaign(campaign_id)
     if not player_list:
         logging.warning(f"No player characters found in campaign {campaign_id}")
         raise HTTPException(status_code=404, detail="No player characters found in this campaign")
-    stats = pcm.list_passive_stats(player_list)
+    stats = pcm.list_passive_stats(player_list, stat_name)
     return stats
 
 @app.post("/players/{campaign_id}/notes/")
