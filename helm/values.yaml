@@ -6,7 +6,7 @@ image:
   pullPolicy: Always
 
 imagePullSecrets:
-  - name: docker-auth
+  - name: docker-auth-secret
 
 service:
   type: ClusterIP
